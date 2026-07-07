@@ -242,12 +242,19 @@ export default function InteractiveModule({ selectedLevel, setSelectedLevel }) {
     isAiLocked.current = true;
     setIsLoading(true);
 
-    // OTOMATIS REKAM PROGRESS KE DATABASE LARAVEL
+    // ==========================================
+    // PERBAIKAN: AMBIL TOKEN DAN KIRIM HEADER
+    // ==========================================
+    const token = localStorage.getItem('token');
+
     fetch(`${API_BASE_URL}/progress`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
       body: JSON.stringify({
-        user_id: 1, 
         module_id: currentModule.id,
         accuracy: finalConfidence
       })

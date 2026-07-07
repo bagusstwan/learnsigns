@@ -28,24 +28,51 @@ export default function ProgressPage() {
   const gridStats = isMobile ? '1fr' : 'repeat(3, 1fr)';
   const gridLogs = isDesktop ? '1fr 1fr' : '1fr';
 
-  /* Data Mock */
-  const weeklyData = [
-    { day: "Sen", skor: 40 }, { day: "Sel", skor: 65 }, { day: "Rab", skor: 45 }, 
-    { day: "Kam", skor: 90 }, { day: "Jum", skor: 75 }, { day: "Sab", skor: 85 }, { day: "Min", skor: 100 }
-  ];
+  /* STATE MANAGEMENT API */
+  const [dashboardData, setDashboardData] = useState({
+    total_stars: 0,
+    average_accuracy: 0,
+    completed_modules: 0,
+    weekly_activity: [],
+    learning_logs: [],
+    quest_logs: []
+  });
+  
+  const [isLoading, setIsLoading] = useState(true);
+  const [apiError, setApiError] = useState("");
 
-  const learningLogs = [
-    { id: 1, module: "Level 1: Huruf A", score: 95, date: "Hari ini, 14:30" },
-    { id: 2, module: "Level 1: Huruf B", score: 88, date: "Hari ini, 10:15" },
-    { id: 3, module: "Level 2: Kata 'IBU'", score: 75, date: "Kemarin, 16:45" },
-    { id: 4, module: "Level 1: Huruf C", score: 92, date: "22 Jun 2026" },
-  ];
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api/v1';
+  const token = localStorage.getItem('token');
 
-  const questLogs = [
-    { id: 1, quest: "Pemanasan Isyarat (A)", reward: 50, date: "Hari ini, 15:00" },
-    { id: 2, quest: "Tantangan Konsistensi (B)", reward: 100, date: "Kemarin, 18:20" },
-    { id: 3, quest: "Eja Kata Cepat", reward: 250, date: "21 Jun 2026" },
-  ];
+  useEffect(() => {
+    const fetchDashboardStats = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/progress/stats`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        
+        const resData = await response.json();
+        
+        if (response.ok && resData.status === 'success') {
+          setDashboardData(resData.data);
+        } else {
+          setApiError("Gagal mengambil data dari server.");
+        }
+      } catch (err) {
+        setApiError("Koneksi ke server terputus.");
+        console.error("Dashboard fetch error:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchDashboardStats();
+  }, [API_BASE_URL, token]);
 
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
@@ -60,6 +87,24 @@ export default function ProgressPage() {
     }
     return null;
   };
+
+  if (isLoading) {
+    return (
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', backgroundColor: '#FAFAFA' }}>
+         <div style={{ width: '40px', height: '40px', border: '3px solid #EAEAEA', borderTop: '3px solid #111827', borderRadius: '50%', animation: 'spin 1s linear infinite', marginBottom: '16px' }}></div>
+         <p style={{ color: '#6B7280', fontWeight: '600' }}>Memuat data perkembangan Anda...</p>
+         <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
+      </div>
+    );
+  }
+
+  if (apiError) {
+    return (
+      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#FAFAFA' }}>
+         <p style={{ color: '#DC2626', fontWeight: '600', backgroundColor: '#FEF2F2', padding: '16px 24px', borderRadius: '8px', border: '1px solid #FCA5A5' }}>{apiError}</p>
+      </div>
+    );
+  }
 
   return (
     <main style={{ flex: 1, display: 'flex', flexDirection: 'column', overflowY: 'auto', overflowX: 'hidden', backgroundColor: '#FAFAFA', padding: paddingMain, boxSizing: 'border-box', minWidth: 0 }}>
@@ -76,14 +121,16 @@ export default function ProgressPage() {
           </p>
         </div>
 
-        {/* STATS KARTU */}
+        {/* STATS KARTU (DATA DINAMIS) */}
         <div style={{ display: 'grid', gridTemplateColumns: gridStats, gap: '20px', boxSizing: 'border-box' }}>
           <div style={{ backgroundColor: '#FFFFFF', padding: '24px', borderRadius: '12px', border: '1px solid #EAEAEA', boxShadow: '0 1px 2px rgba(0,0,0,0.02)', display: 'flex', flexDirection: 'column', boxSizing: 'border-box' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
               <span style={{ fontSize: '12px', fontWeight: '600', color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Total Bintang</span>
               <div style={{ padding: '6px', borderRadius: '6px', backgroundColor: '#FFFBEB' }}><IconStar /></div>
             </div>
-            <h3 style={{ margin: 0, fontSize: '28px', fontWeight: '800', color: '#111827' }}>1,240</h3>
+            <h3 style={{ margin: 0, fontSize: '28px', fontWeight: '800', color: '#111827' }}>
+              {dashboardData.total_stars.toLocaleString('id-ID')}
+            </h3>
           </div>
 
           <div style={{ backgroundColor: '#FFFFFF', padding: '24px', borderRadius: '12px', border: '1px solid #EAEAEA', boxShadow: '0 1px 2px rgba(0,0,0,0.02)', display: 'flex', flexDirection: 'column', boxSizing: 'border-box' }}>
@@ -91,7 +138,9 @@ export default function ProgressPage() {
               <span style={{ fontSize: '12px', fontWeight: '600', color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Rata-rata Akurasi</span>
               <div style={{ padding: '6px', borderRadius: '6px', backgroundColor: '#ECFDF5' }}><IconCheckCircle /></div>
             </div>
-            <h3 style={{ margin: 0, fontSize: '28px', fontWeight: '800', color: '#111827' }}>87.5%</h3>
+            <h3 style={{ margin: 0, fontSize: '28px', fontWeight: '800', color: '#111827' }}>
+              {dashboardData.average_accuracy}%
+            </h3>
           </div>
 
           <div style={{ backgroundColor: '#FFFFFF', padding: '24px', borderRadius: '12px', border: '1px solid #EAEAEA', boxShadow: '0 1px 2px rgba(0,0,0,0.02)', display: 'flex', flexDirection: 'column', boxSizing: 'border-box' }}>
@@ -99,21 +148,22 @@ export default function ProgressPage() {
               <span style={{ fontSize: '12px', fontWeight: '600', color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Modul Selesai</span>
               <div style={{ padding: '6px', borderRadius: '6px', backgroundColor: '#EFF6FF', color: '#2563EB' }}><IconTrendingUp /></div>
             </div>
-            <h3 style={{ margin: 0, fontSize: '28px', fontWeight: '800', color: '#111827' }}>24 <span style={{ fontSize: '16px', fontWeight: '500', color: '#9CA3AF' }}>/ 50</span></h3>
+            <h3 style={{ margin: 0, fontSize: '28px', fontWeight: '800', color: '#111827' }}>
+              {dashboardData.completed_modules} <span style={{ fontSize: '16px', fontWeight: '500', color: '#9CA3AF' }}>modul</span>
+            </h3>
           </div>
         </div>
 
-        {/* GRAFIK RECHARTS (Disuntik anti-overflow) */}
+        {/* GRAFIK RECHARTS */}
         <div style={{ backgroundColor: '#FFFFFF', padding: isMobile ? '24px 16px' : '32px', borderRadius: '12px', border: '1px solid #EAEAEA', boxShadow: '0 1px 2px rgba(0,0,0,0.02)', boxSizing: 'border-box', width: '100%', minWidth: 0, overflow: 'hidden' }}>
           <div style={{ marginBottom: '32px' }}>
             <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '800', color: '#111827' }}>Grafik Aktivitas Mingguan</h3>
             <span style={{ fontSize: '13px', color: '#6B7280' }}>Skor performa berdasarkan latihan 7 hari terakhir.</span>
           </div>
           
-          {/* PENAMBAHAN MIN-WIDTH 0 DAN OVERFLOW HIDDEN DI WRAPPER INI SANGAT KRUSIAL */}
           <div style={{ width: '100%', height: '280px', boxSizing: 'border-box', minWidth: 0, overflow: 'hidden' }}>
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={weeklyData} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
+              <BarChart data={dashboardData.weekly_activity} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F3F4F6" />
                 <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#6B7280' }} dy={10} />
                 <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#9CA3AF' }} dx={-10} domain={[0, 100]} />
@@ -124,7 +174,7 @@ export default function ProgressPage() {
           </div>
         </div>
 
-        {/* LOGS */}
+        {/* LOGS LIST */}
         <div style={{ display: 'grid', gridTemplateColumns: gridLogs, gap: '24px', boxSizing: 'border-box', minWidth: 0 }}>
           
           <div style={{ backgroundColor: '#FFFFFF', border: '1px solid #EAEAEA', borderRadius: '12px', padding: isMobile ? '20px' : '24px', boxShadow: '0 1px 2px rgba(0,0,0,0.02)', boxSizing: 'border-box', minWidth: 0 }}>
@@ -134,18 +184,22 @@ export default function ProgressPage() {
             </div>
             
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              {learningLogs.map((log) => (
-                <div key={log.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '16px', borderBottom: '1px solid #F3F4F6' }}>
-                  <div style={{ minWidth: 0, paddingRight: '8px' }}>
-                    <h4 style={{ margin: '0 0 4px 0', fontSize: '14px', fontWeight: '600', color: '#111827', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{log.module}</h4>
-                    <span style={{ fontSize: '12px', color: '#9CA3AF' }}>{log.date}</span>
+              {dashboardData.learning_logs.length > 0 ? (
+                dashboardData.learning_logs.map((log) => (
+                  <div key={log.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '16px', borderBottom: '1px solid #F3F4F6' }}>
+                    <div style={{ minWidth: 0, paddingRight: '8px' }}>
+                      <h4 style={{ margin: '0 0 4px 0', fontSize: '14px', fontWeight: '600', color: '#111827', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{log.module}</h4>
+                      <span style={{ fontSize: '12px', color: '#9CA3AF' }}>{log.date}</span>
+                    </div>
+                    <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                      <span style={{ fontSize: '14px', fontWeight: '800', color: log.score >= 90 ? '#10B981' : '#111827' }}>{log.score}%</span>
+                      <p style={{ margin: 0, fontSize: '11px', color: '#6B7280' }}>Akurasi</p>
+                    </div>
                   </div>
-                  <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                    <span style={{ fontSize: '14px', fontWeight: '800', color: log.score >= 90 ? '#10B981' : '#111827' }}>{log.score}%</span>
-                    <p style={{ margin: 0, fontSize: '11px', color: '#6B7280' }}>Akurasi</p>
-                  </div>
-                </div>
-              ))}
+                ))
+              ) : (
+                <p style={{ fontSize: '13px', color: '#9CA3AF', textAlign: 'center', padding: '20px 0' }}>Belum ada log pembelajaran.</p>
+              )}
             </div>
           </div>
 
@@ -156,18 +210,22 @@ export default function ProgressPage() {
             </div>
             
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              {questLogs.map((log) => (
-                <div key={log.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '16px', borderBottom: '1px solid #F3F4F6' }}>
-                  <div style={{ minWidth: 0, paddingRight: '8px' }}>
-                    <h4 style={{ margin: '0 0 4px 0', fontSize: '14px', fontWeight: '600', color: '#111827', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{log.quest}</h4>
-                    <span style={{ fontSize: '12px', color: '#9CA3AF' }}>{log.date}</span>
+              {dashboardData.quest_logs.length > 0 ? (
+                dashboardData.quest_logs.map((log) => (
+                  <div key={log.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '16px', borderBottom: '1px solid #F3F4F6' }}>
+                    <div style={{ minWidth: 0, paddingRight: '8px' }}>
+                      <h4 style={{ margin: '0 0 4px 0', fontSize: '14px', fontWeight: '600', color: '#111827', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{log.quest}</h4>
+                      <span style={{ fontSize: '12px', color: '#9CA3AF' }}>{log.date}</span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', backgroundColor: '#FFFBEB', padding: '4px 10px', borderRadius: '6px', flexShrink: 0 }}>
+                      <IconStar />
+                      <span style={{ fontSize: '13px', fontWeight: '800', color: '#B45309' }}>+{log.reward}</span>
+                    </div>
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px', backgroundColor: '#FFFBEB', padding: '4px 10px', borderRadius: '6px', flexShrink: 0 }}>
-                    <IconStar />
-                    <span style={{ fontSize: '13px', fontWeight: '800', color: '#B45309' }}>+{log.reward}</span>
-                  </div>
-                </div>
-              ))}
+                ))
+              ) : (
+                <p style={{ fontSize: '13px', color: '#9CA3AF', textAlign: 'center', padding: '20px 0' }}>Belum ada quest yang diselesaikan.</p>
+              )}
             </div>
           </div>
 

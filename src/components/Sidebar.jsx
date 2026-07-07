@@ -1,4 +1,6 @@
+import { useState } from 'react';
 import PropTypes from 'prop-types';
+import ModalAlert from './ModalAlert'; 
 
 /* IKON MENU UTAMA */
 const IconHome = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>;
@@ -13,7 +15,9 @@ const IconProfile = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="
 const IconSettings = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>;
 const IconLogout = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>;
 
-export default function Sidebar({ activeMenu, setActiveMenu, selectedLevel, setSelectedLevel, isMobile, isOpen, setIsOpen }) {
+export default function Sidebar({ activeMenu, setActiveMenu, selectedLevel, setSelectedLevel, isMobile, isOpen, setIsOpen, userRole }) {
+  
+  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
   
   const handleMenuClick = (menuType) => {
     setActiveMenu(menuType);
@@ -27,14 +31,18 @@ export default function Sidebar({ activeMenu, setActiveMenu, selectedLevel, setS
     if (isMobile) setIsOpen(false); 
   };
 
+  const executeLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    window.location.href = '/login';
+  };
+
   return (
     <>
-      {/* Overlay Gelap Khusus Mobile */}
       {isMobile && isOpen && (
         <div onClick={() => setIsOpen(false)} style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(17, 24, 39, 0.5)', zIndex: 45, backdropFilter: 'blur(2px)' }}></div>
       )}
 
-      {/* Kontainer Sidebar - Fixed tinggi 100% */}
       <aside style={{ 
         width: '260px', 
         backgroundColor: '#FAFAFA', 
@@ -51,7 +59,6 @@ export default function Sidebar({ activeMenu, setActiveMenu, selectedLevel, setS
         flexShrink: 0 
       }}>
         
-        {/* Area Navigasi Utama (Scrollable Jika Layar Pendek) */}
         <div style={{ flex: 1, overflowY: 'auto', padding: '24px 0' }}>
           
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '32px', padding: '0 24px' }}>
@@ -59,7 +66,7 @@ export default function Sidebar({ activeMenu, setActiveMenu, selectedLevel, setS
               <div style={{ width: '26px', height: '26px', borderRadius: '6px', backgroundColor: '#111827', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
               </div>
-              <h1 style={{ margin: 0, fontSize: '18px', fontWeight: '800', letterSpacing: '-0.5px', color: '#111827' }}>EduSync</h1>
+              <h1 style={{ margin: 0, fontSize: '18px', fontWeight: '800', letterSpacing: '-0.5px', color: '#111827' }}>VIBA.AI</h1>
             </div>
             {isMobile && (
               <button onClick={() => setIsOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#6B7280', display: 'flex', padding: '4px' }}><IconClose /></button>
@@ -86,9 +93,11 @@ export default function Sidebar({ activeMenu, setActiveMenu, selectedLevel, setS
               <IconTrophy /> <span style={{ fontSize: '14px' }}>Tantangan (Quest)</span>
             </div>
 
-            <div onClick={() => handleMenuClick('educator')} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 12px', borderRadius: '8px', color: activeMenu === 'educator' ? '#111827' : '#6B7280', backgroundColor: activeMenu === 'educator' ? '#F3F4F6' : 'transparent', cursor: 'pointer', fontWeight: activeMenu === 'educator' ? '600' : '500', transition: 'all 0.2s' }} onMouseOver={(e) => { if(activeMenu !== 'educator') e.currentTarget.style.backgroundColor = '#F9FAFB'; }} onMouseOut={(e) => { if(activeMenu !== 'educator') e.currentTarget.style.backgroundColor = 'transparent'; }}>
-              <IconUsers /> <span style={{ fontSize: '14px' }}>Ruang Pendidik</span>
-            </div>
+            {userRole !== 'student' && (
+              <div onClick={() => handleMenuClick('educator')} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 12px', borderRadius: '8px', color: activeMenu === 'educator' ? '#111827' : '#6B7280', backgroundColor: activeMenu === 'educator' ? '#F3F4F6' : 'transparent', cursor: 'pointer', fontWeight: activeMenu === 'educator' ? '600' : '500', transition: 'all 0.2s' }} onMouseOver={(e) => { if(activeMenu !== 'educator') e.currentTarget.style.backgroundColor = '#F9FAFB'; }} onMouseOut={(e) => { if(activeMenu !== 'educator') e.currentTarget.style.backgroundColor = 'transparent'; }}>
+                <IconUsers /> <span style={{ fontSize: '14px' }}>Ruang Pendidik</span>
+              </div>
+            )}
 
             <div onClick={() => handleMenuClick('progress')} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 12px', borderRadius: '8px', color: activeMenu === 'progress' ? '#111827' : '#6B7280', backgroundColor: activeMenu === 'progress' ? '#F3F4F6' : 'transparent', cursor: 'pointer', fontWeight: activeMenu === 'progress' ? '600' : '500', transition: 'all 0.2s', marginBottom: '8px' }} onMouseOver={(e) => { if(activeMenu !== 'progress') e.currentTarget.style.backgroundColor = '#F9FAFB'; }} onMouseOut={(e) => { if(activeMenu !== 'progress') e.currentTarget.style.backgroundColor = 'transparent'; }}>
               <IconTrendingUp /> <span style={{ fontSize: '14px' }}>Monitoring Perkembangan</span>
@@ -97,7 +106,6 @@ export default function Sidebar({ activeMenu, setActiveMenu, selectedLevel, setS
           </nav>
         </div>
 
-        {/* BOTTOM ACTION BAR (Selalu Tertahan Di Bawah) */}
         <div style={{ padding: '16px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #EAEAEA', backgroundColor: '#FAFAFA', flexShrink: 0 }}>
           
           <button title="Leaderboard" onClick={() => handleMenuClick('leaderboard')} style={{ width: '40px', height: '40px', borderRadius: '8px', display: 'flex', justifyContent: 'center', alignItems: 'center', background: activeMenu === 'leaderboard' ? '#E5E7EB' : 'transparent', border: 'none', cursor: 'pointer', color: activeMenu === 'leaderboard' ? '#111827' : '#6B7280', transition: 'all 0.2s ease' }} onMouseOver={(e) => { e.currentTarget.style.backgroundColor = '#E5E7EB'; e.currentTarget.style.color = '#111827'; }} onMouseOut={(e) => { e.currentTarget.style.backgroundColor = activeMenu === 'leaderboard' ? '#E5E7EB' : 'transparent'; e.currentTarget.style.color = activeMenu === 'leaderboard' ? '#111827' : '#6B7280'; }}>
@@ -112,13 +120,28 @@ export default function Sidebar({ activeMenu, setActiveMenu, selectedLevel, setS
             <IconSettings />
           </button>
           
-          <button title="Logout" onClick={() => { if(window.confirm('Apakah Anda yakin ingin keluar dari EduSync?')) { console.log('User logged out'); } }} style={{ width: '40px', height: '40px', borderRadius: '8px', display: 'flex', justifyContent: 'center', alignItems: 'center', background: 'transparent', border: 'none', cursor: 'pointer', color: '#EF4444', transition: 'all 0.2s ease' }} onMouseOver={(e) => { e.currentTarget.style.backgroundColor = '#FEE2E2'; e.currentTarget.style.color = '#DC2626'; }} onMouseOut={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = '#EF4444'; }}>
+          <button 
+            title="Logout" 
+            onClick={() => setIsLogoutModalOpen(true)} 
+            style={{ width: '40px', height: '40px', borderRadius: '8px', display: 'flex', justifyContent: 'center', alignItems: 'center', background: 'transparent', border: 'none', cursor: 'pointer', color: '#EF4444', transition: 'all 0.2s ease' }} 
+            onMouseOver={(e) => { e.currentTarget.style.backgroundColor = '#FEE2E2'; e.currentTarget.style.color = '#DC2626'; }} 
+            onMouseOut={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = '#EF4444'; }}
+          >
             <IconLogout />
           </button>
-
         </div>
-
       </aside>
+
+      <ModalAlert 
+        isOpen={isLogoutModalOpen}
+        onClose={() => setIsLogoutModalOpen(false)}
+        onConfirm={executeLogout}
+        title="Keluar Sistem EduSync"
+        message="Anda yakin ingin mengakhiri sesi saat ini? Anda perlu memasukkan kembali kredensial akses untuk masuk."
+        confirmText="Keluar Sistem"
+        cancelText="Batalkan"
+        type="danger"
+      />
     </>
   );
 }
@@ -131,4 +154,5 @@ Sidebar.propTypes = {
   isMobile: PropTypes.bool.isRequired,
   isOpen: PropTypes.bool.isRequired,
   setIsOpen: PropTypes.func.isRequired,
+  userRole: PropTypes.string, 
 };
