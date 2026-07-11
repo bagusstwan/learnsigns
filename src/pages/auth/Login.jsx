@@ -52,7 +52,7 @@ export default function Login() {
       localStorage.setItem('user', JSON.stringify(data.user));
 
       if (data.user.role === 'teacher' || data.user.role === 'corporate') {
-        navigate('/teacher-dashboard');
+        navigate('/dashboard');
       } else {
         navigate('/dashboard');
       }

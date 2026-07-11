@@ -8,6 +8,7 @@ import ProgressPage from './pages/ProgressPage';
 import ProfilePage from './pages/ProfilePage';
 import SettingsPage from './pages/SettingsPage';
 import LeaderboardPage from './pages/LeaderboardPage';
+import StudentManagementPage from './pages/StudentManagementPage';
 
 // Impor Halaman Auth yang akan kita buat
 import Login from './pages/auth/Login';
@@ -36,7 +37,7 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
   return children;
 };
 
-// 2. LAYOUT DASHBOARD UTAMA BAPAK (SUDAH DI-REFACTOR)
+// 2. LAYOUT DASHBOARD UTAMA
 const DashboardLayout = () => {
   // Default menu diset ke modules agar siswa langsung belajar saat login
   const [activeMenu, setActiveMenu] = useState('modules'); 
@@ -64,9 +65,9 @@ const DashboardLayout = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // KEAMANAN TAMBAHAN: Jika user nge-hack state untuk buka menu educator
+  // KEAMANAN TAMBAHAN: Jika user (murid) nge-hack state untuk buka menu educator atau manajemen murid
   useEffect(() => {
-    if (activeMenu === 'educator' && user?.role === 'student') {
+    if ((activeMenu === 'educator' || activeMenu === 'students') && user?.role === 'student') {
         setActiveMenu('modules');
     }
   }, [activeMenu, user]);
@@ -91,7 +92,7 @@ const DashboardLayout = () => {
               <div style={{ width: '26px', height: '26px', borderRadius: '4px', backgroundColor: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
               </div>
-              <h1 style={{ margin: 0, fontSize: '18px', fontWeight: '700', letterSpacing: '-0.5px', color: '#111827' }}>EduSync</h1>
+              <h1 style={{ margin: 0, fontSize: '18px', fontWeight: '700', letterSpacing: '-0.5px', color: '#111827' }}>VIBA.AI</h1>
             </div>
           </div>
         </header>
@@ -113,8 +114,9 @@ const DashboardLayout = () => {
         {activeMenu === 'progress' && <ProgressPage />}
         {activeMenu === 'quests' && <QuestPage />}
         
-        {/* HANYA GURU YANG BISA RENDER EDUCATOR PAGE */}
+        {/* HANYA PENDIDIK / INSTANSI YANG BISA RENDER EDUCATOR & STUDENT MANAGEMENT PAGE */}
         {activeMenu === 'educator' && user?.role !== 'student' && <EducatorPage />}
+        {activeMenu === 'students' && user?.role !== 'student' && <StudentManagementPage />}
         
         {activeMenu === 'profile' && <ProfilePage />}
         {activeMenu === 'settings' && <SettingsPage />}
