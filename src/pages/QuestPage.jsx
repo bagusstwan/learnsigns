@@ -3,18 +3,15 @@ import Webcam from 'react-webcam';
 import { Hands, HAND_CONNECTIONS } from '@mediapipe/hands';
 import { Camera } from '@mediapipe/camera_utils';
 import { drawConnectors, drawLandmarks } from '@mediapipe/drawing_utils';
-import * as tf from '@tensorflow/tfjs'; // <-- OTAK AI BAPAK MASUK DI SINI
-import Mascot from '../components/Mascot';
+import * as tf from '@tensorflow/tfjs';
 
 import FilterTabs from '../components/FilterTabs';
 import QuestCard from '../components/QuestCard';
 import Pagination from '../components/Pagination';
 
-const IconStar = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="#F59E0B" stroke="#F59E0B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>;
-const IconBack = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>;
-const IconAlert = () => <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#DC2626" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginBottom: '16px' }}><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>;
+const IconStar = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="#F59E0B" stroke="#F59E0B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>;
+const IconCameraPlaceholder = () => <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="#0F172A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>;
 
-// LABEL DATASET ABJAD (Sesuai dengan Interactive Module Bapak)
 const ALPHABET_LABELS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'];
 
 export default function QuestPage() {
@@ -26,21 +23,15 @@ export default function QuestPage() {
   }, []);
 
   const isDesktop = windowWidth > 1024;
-  const isTablet = windowWidth <= 1024 && windowWidth >= 768;
   const isMobileScreen = windowWidth < 768;
 
-  // STATE CORE UTAMA
   const [quests, setQuests] = useState([]);
-  const [totalStars, setTotalStars] = useState(0);
   const [activeQuest, setActiveQuest] = useState(null); 
-  const [signStatus, setSignStatus] = useState("Menunggu input...");
-  const [aiMessage, setAiMessage] = useState("Arahkan tangan ke kamera untuk memulai misi.");
+  const [signStatus, setSignStatus] = useState("");
+  const [aiMessage, setAiMessage] = useState("Mesin visi komputer aktif. Sedang memindai dan mengekstraksi titik koordinat tangan siswa secara aktual...");
   const [isThinking, setIsThinking] = useState(false);
   
-  // STATE TENSORFLOW MODEL
   const [tfModel, setTfModel] = useState(null);
-  
-  // STATE UI STATUS (Loading & Error)
   const [isLoading, setIsLoading] = useState(true);
   const [apiError, setApiError] = useState("");
 
@@ -51,27 +42,19 @@ export default function QuestPage() {
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api/v1';
   const token = localStorage.getItem('token');
 
-  // 1. FETCH DATA QUEST
   const fetchQuestsData = async () => {
-    setIsLoading(true);
-    setApiError("");
+    setIsLoading(true); setApiError("");
     try {
       const response = await fetch(`${API_BASE_URL}/quests`, {
         method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'Authorization': `Bearer ${token}`
-        }
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'Authorization': `Bearer ${token}` }
       });
-      
       const resData = await response.json();
-      
       if (response.ok) {
         if (!resData.data || resData.data.length === 0) {
-          setApiError("Belum ada data misi yang tersedia. Pastikan Seeder di Laravel berhasil dijalankan.");
-          setQuests([]);
+          setApiError("Belum ada data misi yang tersedia."); setQuests([]);
         } else {
+          // PERBAIKAN: Logika asli pembagian kategori berdasarkan reward_stars dikembalikan!
           const processedQuests = resData.data.map(q => {
             let cat = "Abjad"; 
             if (q.reward_stars >= 100 && q.reward_stars <= 150) cat = "Kosa Kata";
@@ -79,47 +62,32 @@ export default function QuestPage() {
             return { ...q, category: cat };
           });
           setQuests(processedQuests);
-          setTotalStars(resData.user_stars);
         }
-      } else {
-        setApiError(`Gagal menghubungi API (Status: ${response.status}).`);
-      }
-    } catch (err) {
-      setApiError("Koneksi ke server terputus. Pastikan server Laravel sedang berjalan.");
-    } finally {
-      setIsLoading(false);
-    }
+      } else { setApiError(`Gagal menghubungi API.`); }
+    } catch (err) { setApiError("Koneksi ke server terputus."); } finally { setIsLoading(false); }
   };
 
-  useEffect(() => {
-    if (!activeQuest) fetchQuestsData();
-  }, [activeQuest]);
+  useEffect(() => { fetchQuestsData(); }, []);
 
-  // 2. LOAD TENSORFLOW MODEL BERDASARKAN KATEGORI MISI AKTIF
   useEffect(() => {
     if (activeQuest) {
-      let folderModel = 'abjad'; // Default
-      if (activeQuest.category === 'Kosa Kata') folderModel = 'kosakata';
-      if (activeQuest.category === 'Kalimat') folderModel = 'kalimat';
-
-      setAiMessage(`Menyiapkan mesin AI untuk kategori ${folderModel}...`);
-
+      setAiMessage(`Menyiapkan AI untuk misi: ${activeQuest.title}...`);
       const loadModel = async () => {
-        if (tfModel) {
-            tfModel.dispose(); 
-        }
+        if (tfModel) tfModel.dispose(); 
         try {
-          // Menembak server lokal Bapak sesuai kategori quest
-          const modelUrl = `http://127.0.0.1:8000/serve-ai/${folderModel}/model.json?v=${new Date().getTime()}`;
+          // Tetap gunakan model abjad dulu untuk menghindari crash model kosa kata
+          const modelUrl = `http://127.0.0.1:8000/serve-ai/abjad/model.json?v=${new Date().getTime()}`;
           const loadedModel = await tf.loadLayersModel(modelUrl);
           setTfModel(loadedModel);
-          setAiMessage(`Sistem AI ${folderModel} aktif. Mulai peragakan gestur untuk misi ini!`);
+          setAiMessage(`Model AI aktif. Tahan gestur huruf ${activeQuest.target_gesture} di depan kamera tanpa ragu.`);
         } catch (error) {
-          console.error("Gagal memuat AI model:", error);
-          setAiMessage(`Gagal memuat otak AI untuk ${folderModel}. Pastikan folder model tersedia.`);
+          setAiMessage(`Gagal memuat otak AI untuk misi ini.`);
         }
       };
       loadModel();
+    } else {
+      setAiMessage("Mesin visi komputer aktif. Sedang memindai dan mengekstraksi titik koordinat tangan siswa secara aktual...");
+      setSignStatus("");
     }
   }, [activeQuest]);
 
@@ -127,20 +95,16 @@ export default function QuestPage() {
     try {
       const response = await fetch(`${API_BASE_URL}/quests/complete`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ quest_id: activeQuest.id })
       });
-      const resData = await response.json();
       if (response.ok) {
-        setTotalStars(resData.new_total_stars);
-        setAiMessage(`Misi Sukses! Data disimpan ke database. Anda mendapatkan +${activeQuest.reward_stars} Bintang!`);
+        setAiMessage(`Misi Sukses! Bintang berhasil ditambahkan.`);
+        fetchQuestsData();
+        setActiveQuest(null);
       }
     } catch (err) {
-      console.error("Gagal menyimpan progress misi:", err);
+      console.error("Gagal menyimpan progress misi.");
     } finally {
       setIsThinking(false);
     }
@@ -156,18 +120,18 @@ export default function QuestPage() {
   const webcamRef = useRef(null);
   const canvasRef = useRef(null);
   const consecutiveFrameCount = useRef(0);
+  const successFrameCount = useRef(0);
   const pendingStatusRef = useRef("");
-  const latestConfidenceRef = useRef(0);
 
   useEffect(() => {
     if (activeQuest) {
-      setSignStatus("System Standby");
+      setSignStatus("");
       consecutiveFrameCount.current = 0;
+      successFrameCount.current = 0;
       pendingStatusRef.current = "";
     }
   }, [activeQuest]);
 
-  // 3. MEDIAPIPE + TENSORFLOW PREDICTION LOGIC
   useEffect(() => {
     if (!activeQuest || !tfModel) return;
 
@@ -182,89 +146,64 @@ export default function QuestPage() {
       canvasRef.current.height = videoHeight;
       const canvasCtx = canvasRef.current.getContext("2d");
       
-      // Mirroring canvas seperti di Interactive Module
       canvasCtx.save(); 
       canvasCtx.clearRect(0, 0, videoWidth, videoHeight);
       canvasCtx.scale(-1, 1);
       canvasCtx.translate(-videoWidth, 0);
 
-      let baseStatus = "No Detection";
+      let baseStatus = "";
       let displayPercentage = 0;
+      let detectedLabel = "-";
       
       if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
         let flattened = [];
-
         for (const landmarks of results.multiHandLandmarks) {
-          drawConnectors(canvasCtx, landmarks, HAND_CONNECTIONS, { color: '#F59E0B', lineWidth: 3 });
+          drawConnectors(canvasCtx, landmarks, HAND_CONNECTIONS, { color: '#0F172A', lineWidth: 3 });
           drawLandmarks(canvasCtx, landmarks, { color: '#FFFFFF', lineWidth: 1.5, radius: 2.5 });
-          
-          for (const point of landmarks) {
-            flattened.push(point.x, point.y, point.z);
-          }
+          for (const point of landmarks) { flattened.push(point.x, point.y, point.z); }
         }
         
-        while (flattened.length < 126) {
-          flattened.push(0.0, 0.0, 0.0);
-        }
+        while (flattened.length < 126) { flattened.push(0.0, 0.0, 0.0); }
 
-        let detectedLabel = "-";
-        
         tf.tidy(() => {
           const inputTensor = tf.tensor2d([flattened.slice(0, 126)]);
           const prediction = tfModel.predict(inputTensor);
-          
           const maxIndex = prediction.argMax(-1).dataSync()[0];
           const maxConfidence = prediction.max().dataSync()[0];
-          
           displayPercentage = Math.round(maxConfidence * 100);
           
           if (displayPercentage > 35) { 
-             if (activeQuest.category === 'Abjad') {
-                 detectedLabel = ALPHABET_LABELS[maxIndex];
-             } 
-             // TODO: Tambahkan mapping khusus Kosa Kata / Kalimat jika dataset-nya berbeda mapping indexnya
-             else {
-                 // Fallback sementara jika label Kosa Kata belum di-mapping array
-                 detectedLabel = ALPHABET_LABELS[maxIndex] || "Terdeteksi"; 
-             }
+             detectedLabel = ALPHABET_LABELS[maxIndex];
           }
         });
 
-        latestConfidenceRef.current = displayPercentage;
+        const isCorrect = (detectedLabel && detectedLabel.toLowerCase() === activeQuest.target_gesture.toLowerCase());
+        baseStatus = isCorrect ? `Valid` : `Terdeteksi: ${detectedLabel}`;
 
-        // Pencocokan target Quest (Case Insensitive)
-        const isCorrect = (detectedLabel.toLowerCase() === activeQuest.target_gesture.toLowerCase());
-        baseStatus = isCorrect ? `Valid: ${activeQuest.target_gesture}` : `Terdeteksi: ${detectedLabel}`;
-      } else {
-        latestConfidenceRef.current = 0;
-      }
+        if (isCorrect && displayPercentage >= 90) {
+            successFrameCount.current += 1;
+            if (successFrameCount.current >= 15 && !isThinking) {
+               setIsThinking(true);
+               setAiMessage(`Validasi selesai! Menyimpan hasil misi ke server...`);
+               setSignStatus(`Selesai!`);
+               handleQuestSuccess();
+            } else {
+               setSignStatus(`Tahan Posisi... ${Math.round((successFrameCount.current/15)*100)}%`);
+            }
+        } else {
+            successFrameCount.current = 0;
+            if (baseStatus === pendingStatusRef.current) { consecutiveFrameCount.current += 1; } 
+            else { pendingStatusRef.current = baseStatus; consecutiveFrameCount.current = 1; }
 
-      canvasCtx.restore(); 
-
-      // Stabilitas Frame Evaluasi
-      if (baseStatus === pendingStatusRef.current) {
-        consecutiveFrameCount.current += 1;
-      } else {
-        pendingStatusRef.current = baseStatus;
-        consecutiveFrameCount.current = 1;
-      }
-
-      if (consecutiveFrameCount.current >= 5) {
-        const finalUIStatus = displayPercentage > 0 
-          ? `${baseStatus} (${displayPercentage}%)` 
-          : baseStatus;
-          
-        setSignStatus(finalUIStatus);
-
-        // Jika terdeteksi valid dan stabil, selesaikan Quest
-        if (baseStatus.includes("Valid") && !isThinking && displayPercentage >= 80) {
-          setIsThinking(true);
-          setAiMessage(`Menganalisis stabilitas gestur... Akurasi: ${displayPercentage}%`);
-          setTimeout(() => {
-            handleQuestSuccess();
-          }, 2000);
+            if (consecutiveFrameCount.current >= 5) {
+               setSignStatus(displayPercentage > 0 ? `${baseStatus} (${displayPercentage}%)` : baseStatus);
+            }
         }
+      } else {
+        successFrameCount.current = 0;
+        setSignStatus("");
       }
+      canvasCtx.restore(); 
     });
 
     let cameraInstance = null;
@@ -279,107 +218,109 @@ export default function QuestPage() {
     
   }, [activeQuest, isThinking, tfModel]); 
 
-  // VIEW RENDER INTERFACE
-  if (!activeQuest) {
-    return (
-      <main style={{ flex: 1, padding: isDesktop ? '64px 80px' : isTablet ? '40px 48px' : '32px 20px', boxSizing: 'border-box', overflowY: 'auto', backgroundColor: '#FAFAFA' }}>
-        <div style={{ maxWidth: '1000px', margin: '0 auto', width: '100%' }}>
-          
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '32px', flexWrap: 'wrap', gap: '20px' }}>
-            <div>
-              <h1 style={{ margin: '0 0 12px 0', fontSize: isDesktop ? '32px' : '28px', fontWeight: '700', color: '#111827', letterSpacing: '-1px' }}>Papan Misi Harian</h1>
-              <p style={{ margin: 0, fontSize: '15px', color: '#6B7280', maxWidth: '500px', lineHeight: '1.6' }}>Selesaikan tantangan untuk mengumpulkan bintang riil di database EduSync.</p>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', backgroundColor: '#FFFBEB', border: '1px solid #FEF3C7', padding: '10px 20px', borderRadius: '50px' }}>
-              <IconStar />
-              <span style={{ fontSize: '15px', fontWeight: '700', color: '#B45309' }}>{totalStars} Bintang</span>
-            </div>
-          </div>
-
-          <FilterTabs categories={categories} activeFilter={activeFilter} setActiveFilter={setActiveFilter} />
-
-          {isLoading ? (
-            <div style={{ minHeight: '400px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#6B7280' }}>
-              <div style={{ width: '40px', height: '40px', border: '3px solid #EAEAEA', borderTop: '3px solid #111827', borderRadius: '50%', animation: 'spin 1s linear infinite', marginBottom: '16px' }}></div>
-              <p style={{ fontWeight: '600' }}>Mengsinkronisasi data misi dari server...</p>
-              <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
-            </div>
-          ) : apiError ? (
-            <div style={{ minHeight: '300px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', backgroundColor: '#FEF2F2', border: '1px solid #FCA5A5', borderRadius: '12px', padding: '24px', textAlign: 'center' }}>
-              <IconAlert />
-              <h3 style={{ margin: '0 0 8px 0', color: '#B91C1C', fontSize: '18px' }}>Terjadi Kendala Koneksi API</h3>
-              <p style={{ margin: 0, color: '#DC2626', fontSize: '14px', maxWidth: '400px', lineHeight: '1.5' }}>{apiError}</p>
-            </div>
-          ) : currentQuests.length === 0 ? (
-            <div style={{ minHeight: '300px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', border: '1px dashed #D1D5DB', borderRadius: '12px', padding: '24px', textAlign: 'center' }}>
-               <p style={{ color: '#6B7280', fontWeight: '500' }}>Tidak ada misi aktif untuk kategori ini.</p>
-            </div>
-          ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: isDesktop ? 'repeat(3, 1fr)' : isTablet ? 'repeat(2, 1fr)' : '1fr', gap: '20px', minHeight: '400px', alignContent: 'start' }}>
-              {currentQuests.map((quest) => (
-                <QuestCard key={quest.id} quest={quest} onClick={setActiveQuest} />
-              ))}
-            </div>
-          )}
-
-          {!isLoading && !apiError && (
-            <Pagination currentPage={currentPage} totalPages={totalPages} setCurrentPage={setCurrentPage} />
-          )}
-
-        </div>
-      </main>
-    );
-  }
-
   return (
-    <main style={{ flex: 1, display: 'flex', flexDirection: 'column', overflowY: 'auto', backgroundColor: '#FAFAFA' }}>
-      <div style={{ padding: isDesktop ? '40px 48px' : '24px 16px', maxWidth: '1200px', margin: '0 auto', width: '100%', boxSizing: 'border-box' }}>
+    <main style={{ flex: 1, display: 'flex', flexDirection: 'column', overflowY: 'auto', backgroundColor: '#F8FAFC' }}>
+      
+      <div style={{ padding: isDesktop ? '40px 48px' : '24px 16px', maxWidth: '1400px', margin: '0 auto', width: '100%', boxSizing: 'border-box' }}>
         
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '32px', flexWrap: 'wrap', gap: '16px' }}>
-          <div>
-            <button onClick={() => setActiveQuest(null)} style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'none', border: 'none', color: '#6B7280', fontSize: '13px', fontWeight: '600', cursor: 'pointer', padding: '0', marginBottom: '16px' }}><IconBack /> Kembali ke Papan Misi</button>
-            <h2 style={{ margin: '0 0 8px 0', fontSize: isMobileScreen ? '22px' : '28px', fontWeight: '700', color: '#111827', letterSpacing: '-0.8px' }}>Eksekusi Misi: {activeQuest.title}</h2>
-            <p style={{ margin: 0, color: '#6B7280', fontSize: '14px' }}>Selesaikan target gestur untuk menambah bintang permanen di profil Anda.</p>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', backgroundColor: '#FFFBEB', border: '1px solid #FEF3C7', padding: '10px 20px', borderRadius: '50px' }}>
-            <IconStar />
-            <span style={{ fontSize: '14px', fontWeight: '700', color: '#B45309' }}>Total: {totalStars}</span>
-          </div>
+        {/* HEADER */}
+        <div style={{ marginBottom: '32px' }}>
+          <h1 style={{ margin: '0 0 12px 0', fontSize: isMobileScreen ? '28px' : '36px', fontWeight: '800', color: '#0F172A', letterSpacing: '-0.5px' }}>Papan Misi Harian</h1>
+          <p style={{ margin: 0, fontSize: '15px', fontWeight: '400', color: '#475569', maxWidth: '500px', lineHeight: '1.6' }}>Selesaikan tantangan untuk mengumpulkan bintang dan jadilah pemenang.</p>
         </div>
 
-        <div style={{ display: 'flex', flexDirection: isDesktop ? 'row' : 'column', gap: '24px', alignItems: 'flex-start', width: '100%', boxSizing: 'border-box' }}>
-          <div style={{ flex: isDesktop ? '1.3' : 'none', display: 'flex', flexDirection: 'column', gap: '16px', width: '100%' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontSize: '12px', fontWeight: '600', color: '#6B7280', textTransform: 'uppercase' }}>Vision Sensor</span>
-              <span style={{ fontSize: '12px', fontWeight: '600', padding: '4px 10px', borderRadius: '4px', backgroundColor: signStatus.includes("Valid") ? '#E6F4EA' : '#F3F4F6', color: signStatus.includes("Valid") ? '#1E8E3E' : '#4B5563'}}>{signStatus}</span>
-            </div>
-            
-            {/* PASTIKAN WEBCAM MIRRORED AGAR COCOK DENGAN LOGIKA TENSORFLOW */}
-            <div style={{ position: 'relative', width: '100%', aspectRatio: '4/3', borderRadius: '12px', overflow: 'hidden', backgroundColor: '#000000' }}>
-              <Webcam ref={webcamRef} mirrored={true} style={{ position: 'absolute', width: '100%', height: '100%', left: 0, top: 0, objectFit: 'cover' }} />
-              <canvas ref={canvasRef} style={{ position: 'absolute', width: '100%', height: '100%', left: 0, top: 0, zIndex: 10 }} />
-            </div>
+        {/* LAYOUT TERBAGI DUA */}
+        <div style={{ display: 'flex', flexDirection: isDesktop ? 'row' : 'column', gap: '32px', width: '100%', boxSizing: 'border-box' }}>
+          
+          {/* KOLOM KIRI: DAFTAR MISI */}
+          <div style={{ flex: '1', display: 'flex', flexDirection: 'column', minWidth: 0, backgroundColor: '#FFFFFF', padding: '24px', borderRadius: '24px', border: '1px solid #E2E8F0' }}>
+             
+             {/* Header Kolom Kiri */}
+             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+               <h2 style={{ margin: 0, fontSize: '18px', fontWeight: '800', color: '#0F172A' }}>Katalog Tantangan Tersedia</h2>
+               <FilterTabs categories={categories} activeFilter={activeFilter} setActiveFilter={setActiveFilter} />
+             </div>
 
-            <div style={{ padding: '20px', backgroundColor: '#FFFFFF', border: '1px solid #EAEAEA', borderRadius: '12px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <h3 style={{ margin: 0, fontSize: '14px', fontWeight: '700', color: '#111827' }}>Target: {activeQuest.target_gesture}</h3>
-                <span style={{ fontSize: '13px', fontWeight: '700', color: '#F59E0B' }}>Hadiah: +{activeQuest.reward_stars}</span>
-              </div>
-              <p style={{ margin: 0, fontSize: '14px', color: '#6B7280', lineHeight: '1.6' }}>{activeQuest.description}</p>
-            </div>
+             {isLoading ? (
+                <div style={{ display: 'flex', padding: '40px 0', justifyContent: 'center', color: '#64748B' }}>Memuat data misi...</div>
+             ) : apiError ? (
+                <div style={{ padding: '24px', backgroundColor: '#FEF2F2', border: '1px solid #FCA5A5', borderRadius: '16px', color: '#DC2626' }}>{apiError}</div>
+             ) : currentQuests.length === 0 ? (
+                /* PERBAIKAN: Tampilan Empty State jika data filter kosong */
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '48px 24px', border: '1px dashed #CBD5E1', borderRadius: '16px', textAlign: 'center' }}>
+                   <p style={{ margin: 0, fontSize: '14px', fontWeight: '500', color: '#64748B' }}>
+                     Tidak ada misi yang tersedia untuk kategori <strong>{activeFilter}</strong> saat ini.
+                   </p>
+                </div>
+             ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                   {currentQuests.map((quest, index) => (
+                     <QuestCard 
+                        key={quest.id} 
+                        quest={quest} 
+                        index={(currentPage - 1) * itemsPerPage + index}
+                        isActive={activeQuest?.id === quest.id}
+                        onClick={setActiveQuest} 
+                     />
+                   ))}
+                </div>
+             )}
+             
+             {!isLoading && !apiError && currentQuests.length > 0 && <Pagination currentPage={currentPage} totalPages={totalPages} setCurrentPage={setCurrentPage} />}
           </div>
 
-          <div style={{ flex: isDesktop ? '1' : 'none', display: 'flex', flexDirection: 'column', width: '100%', backgroundColor: '#FFFFFF', border: '1px solid #EAEAEA', borderRadius: '12px', padding: '32px 24px', minHeight: isDesktop ? '520px' : 'auto', boxSizing: 'border-box' }}>
-            <div style={{ marginBottom: '32px', display: 'flex', justifyContent: 'center' }}><Mascot isThinking={isThinking} /></div>
-            <div style={{ borderTop: '1px solid #EAEAEA', paddingTop: '24px', marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              <span style={{ fontSize: '12px', fontWeight: '600', color: '#6B7280', textTransform: 'uppercase' }}>Quest Log Evaluator</span>
-              <div style={{ fontSize: '14px', lineHeight: '1.6', color: '#111827', backgroundColor: '#FAFAFA', padding: '16px', borderRadius: '8px', borderLeft: '4px solid #F59E0B' }}>
-                <span style={{ color: '#B45309', fontWeight: '700', display: 'block', marginBottom: '4px' }}>AI System:</span>{aiMessage}
-              </div>
-            </div>
+          {/* KOLOM KANAN: KAMERA & EVALUASI */}
+          <div style={{ flex: isDesktop ? '1.2' : 'none', position: 'relative', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+             
+             {/* Box Kamera 1 */}
+             <div style={{ backgroundColor: '#FFFFFF', padding: '24px', borderRadius: '24px', border: '1px solid #E2E8F0', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '380px' }}>
+                <div style={{ position: 'relative', width: '100%', aspectRatio: '4/3', borderRadius: '16px', overflow: 'hidden', backgroundColor: '#F8FAFC' }}>
+                   
+                   <Webcam ref={webcamRef} mirrored={true} style={{ position: 'absolute', width: '100%', height: '100%', left: 0, top: 0, objectFit: 'cover' }} />
+                   <canvas ref={canvasRef} style={{ position: 'absolute', width: '100%', height: '100%', left: 0, top: 0, zIndex: 10 }} />
+                   
+                   {signStatus.includes("Tahan") && (
+                     <div style={{ position: 'absolute', bottom: '24px', left: '50%', transform: 'translateX(-50%)', zIndex: 15, backgroundColor: '#0F172A', padding: '12px 24px', borderRadius: '99px', color: '#FFFFFF', fontSize: '15px', fontWeight: '700', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
+                        {signStatus}
+                     </div>
+                   )}
+
+                   {!activeQuest && (
+                      <div style={{ position: 'absolute', inset: 0, zIndex: 15, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', color: '#0F172A' }}>
+                         <IconCameraPlaceholder />
+                         <span style={{ marginTop: '16px', fontSize: '24px', fontWeight: '800' }}>Camera</span>
+                      </div>
+                   )}
+                </div>
+             </div>
+
+             {/* Log Analisis Box 2 */}
+             <div style={{ backgroundColor: '#FFFFFF', borderRadius: '16px', padding: '24px', border: '1px solid #E2E8F0' }}>
+                <span style={{ fontSize: '12px', fontWeight: '600', color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Log Analisis AI</span>
+                <p style={{ margin: '8px 0 0 0', fontSize: '14px', color: '#0F172A', lineHeight: '1.6' }}>{aiMessage}</p>
+             </div>
+
+             {/* Referensi Quest Aktif Box 3 */}
+             {activeQuest && (
+               <div style={{ backgroundColor: '#FFFFFF', borderRadius: '16px', padding: '20px', border: '1px solid #E2E8F0', display: 'flex', gap: '20px', alignItems: 'center' }}>
+                 <div style={{ width: '80px', height: '80px', backgroundColor: '#F1F5F9', borderRadius: '12px', flexShrink: 0, border: '1px solid #E2E8F0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <span style={{ fontSize: '32px', fontWeight: '800', color: '#0F172A' }}>{activeQuest.target_gesture}</span>
+                 </div>
+                 <div style={{ flex: 1 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
+                      <h4 style={{ margin: 0, fontSize: '16px', fontWeight: '800', color: '#0F172A' }}>{activeQuest.title}</h4>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', backgroundColor: '#FFFBEB', padding: '6px 12px', borderRadius: '99px' }}>
+                         <IconStar /> <span style={{ fontSize: '14px', fontWeight: '800', color: '#B45309' }}>+{activeQuest.reward_stars}</span>
+                      </div>
+                    </div>
+                    <p style={{ margin: 0, fontSize: '13px', color: '#64748B', lineHeight: '1.5' }}>{activeQuest.description}</p>
+                 </div>
+               </div>
+             )}
+
           </div>
+
         </div>
-
       </div>
     </main>
   );

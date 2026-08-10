@@ -19,7 +19,7 @@ export default function LevelSelector({ isDesktop, isTablet, setSelectedLevel })
           Pilih Tingkat Pembelajaran
         </h1>
         <p style={{ margin: '0 0 48px 0', fontSize: '15px', color: '#6B7280', maxWidth: '600px', lineHeight: '1.6' }}>
-          Platform EduSync dirancang bertahap. Silakan pilih level modul yang ingin Anda praktikkan hari ini bersama AI Assistant kami.
+          Platform Viba.ai dirancang bertahap. Silakan pilih level modul yang ingin Anda praktikkan hari ini bersama AI Assistant kami.
         </p>
         
         <div style={{ display: 'grid', gridTemplateColumns: isDesktop ? 'repeat(3, 1fr)' : isTablet ? 'repeat(2, 1fr)' : '1fr', gap: '20px' }}>

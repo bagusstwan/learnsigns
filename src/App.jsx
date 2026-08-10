@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+
+/* Impor Komponen Dasbor Pribadi */
 import Sidebar from './components/Sidebar';
+import Dashboard from './components/Dashboard'; /* <-- IMPOR KOMPONEN DASHBOARD BARU (Sesuaikan path foldernya jika diletakkan di /pages) */
 import InteractiveModule from './pages/InteractiveModule';
 import QuestPage from './pages/QuestPage';
 import EducatorPage from './pages/EducatorPage';
@@ -10,26 +13,29 @@ import SettingsPage from './pages/SettingsPage';
 import LeaderboardPage from './pages/LeaderboardPage';
 import StudentManagementPage from './pages/StudentManagementPage';
 
-// Impor Halaman Auth yang akan kita buat
+/* Impor Komponen Situs Publik Terpadu */
+import PublicLayout from './layouts/PublicLayout';
+import Home from './pages/public/Home';
+import FeaturesPage from './pages/public/FeaturesPage';
+
+/* Impor Modul Autentikasi */
 import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
 import '@fontsource/geist-sans';
 
-const IconMenu = () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#111827" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>;
+const IconMenu = () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0F172A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>;
 
-// 1. KOMPONEN PELINDUNG RUTE (PROTECTED ROUTE)
+/* KOMPONEN PELINDUNG RUTE RESTRIKSI AKSES */
 const ProtectedRoute = ({ children, allowedRoles }) => {
   const token = localStorage.getItem('token');
   const userStr = localStorage.getItem('user');
 
-  // Jika belum login, tendang kembali ke halaman login
   if (!token || !userStr) {
     return <Navigate to="/login" replace />;
   }
 
   const user = JSON.parse(userStr);
 
-  // Jika role tidak diizinkan, tendang ke dashboard default
   if (allowedRoles && !allowedRoles.includes(user.role)) {
     return <Navigate to="/dashboard" replace />;
   }
@@ -37,9 +43,8 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
   return children;
 };
 
-// 2. LAYOUT DASHBOARD UTAMA
+/* TATA LETAK DASBOR UTAMA APLIKASI */
 const DashboardLayout = () => {
-  // Default menu diset ke modules agar siswa langsung belajar saat login
   const [activeMenu, setActiveMenu] = useState('modules'); 
   const [selectedLevel, setSelectedLevel] = useState(null);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
@@ -58,66 +63,66 @@ const DashboardLayout = () => {
     
     document.body.style.margin = "0";
     document.body.style.padding = "0";
-    document.body.style.backgroundColor = "#FFFFFF"; 
-    document.body.style.color = "#111827"; 
-    document.body.style.fontFamily = '"Geist Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    document.body.style.backgroundColor = "#FAFAFA"; 
+    document.body.style.color = "#0F172A"; 
+    document.body.style.fontFamily = '"Geist Sans", apple system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
     
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // KEAMANAN TAMBAHAN: Jika user (murid) nge-hack state untuk buka menu educator atau manajemen murid
   useEffect(() => {
     if ((activeMenu === 'educator' || activeMenu === 'students') && user?.role === 'student') {
         setActiveMenu('modules');
     }
   }, [activeMenu, user]);
 
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    navigate('/login');
-  };
-
   return (
-    <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', height: '100vh', width: '100vw', overflow: 'hidden', backgroundColor: '#FFFFFF' }}>
+    <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', height: '100vh', width: '100vw', overflow: 'hidden', backgroundColor: '#F8FAFC' }}>
       
-      {/* HEADER MOBILE */}
       {isMobile && (
-        <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', backgroundColor: '#FFFFFF', borderBottom: '1px solid #EAEAEA', flexShrink: 0, zIndex: 40 }}>
+        <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', backgroundColor: '#FFFFFF', borderBottom: '1px solid #E2E8F0', flexShrink: 0, zIndex: 40 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-            <button onClick={() => setIsSidebarOpen(true)} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', display: 'flex', color: '#111827' }}>
+            <button onClick={() => setIsSidebarOpen(true)} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', display: 'flex', color: '#0F172A' }}>
               <IconMenu />
             </button>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <div style={{ width: '26px', height: '26px', borderRadius: '4px', backgroundColor: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
-              </div>
-              <h1 style={{ margin: 0, fontSize: '18px', fontWeight: '700', letterSpacing: '-0.5px', color: '#111827' }}>VIBA.AI</h1>
+              <h1 style={{ margin: 0, fontSize: '24px', fontWeight: '900', fontStyle: 'italic', color: '#0F172A', letterSpacing: '-1px' }}>
+                V<span style={{ fontStyle: 'normal', fontWeight: '800' }}>IBA.AI</span>
+              </h1>
             </div>
           </div>
         </header>
       )}
 
-      {/* SIDEBAR DENGAN DATA USER */}
       <Sidebar 
         activeMenu={activeMenu} setActiveMenu={setActiveMenu}
         selectedLevel={selectedLevel} setSelectedLevel={setSelectedLevel} 
         isMobile={isMobile} isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen}
-        userRole={user?.role} // Kirim data role ke sidebar agar menu Educator bisa disembunyikan
+        userRole={user?.role} 
       />
 
-      {/* AREA KONTEN UTAMA */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflowY: 'auto', overflowX: 'hidden', position: 'relative' }}>
+        
+        {/* LOGIKA PEMANGGILAN KOMPONEN DASHBOARD & INTERACTIVE MODULE */}
+        {activeMenu === 'modules' && !selectedLevel && (
+          <Dashboard 
+            setSelectedLevel={setSelectedLevel} 
+            isMobile={isMobile} 
+            isDesktop={!isMobile} 
+          />
+        )}
+        {activeMenu === 'modules' && selectedLevel && (
+          <InteractiveModule 
+            selectedLevel={selectedLevel} 
+            setSelectedLevel={setSelectedLevel} 
+          />
+        )}
 
-        {/* RENDER KONTEN BERDASARKAN MENU */}
-        {activeMenu === 'modules' && <InteractiveModule selectedLevel={selectedLevel} setSelectedLevel={setSelectedLevel} />}
+        {/* ROUTING KOMPONEN LAINNYA */}
         {activeMenu === 'progress' && <ProgressPage />}
         {activeMenu === 'quests' && <QuestPage />}
-        
-        {/* HANYA PENDIDIK / INSTANSI YANG BISA RENDER EDUCATOR & STUDENT MANAGEMENT PAGE */}
         {activeMenu === 'educator' && user?.role !== 'student' && <EducatorPage />}
         {activeMenu === 'students' && user?.role !== 'student' && <StudentManagementPage />}
-        
         {activeMenu === 'profile' && <ProfilePage />}
         {activeMenu === 'settings' && <SettingsPage />}
         {activeMenu === 'leaderboard' && <LeaderboardPage />}
@@ -127,19 +132,22 @@ const DashboardLayout = () => {
   );
 };
 
-// 3. KOMPONEN APP UTAMA (ROUTER)
+/* KOMPONEN PENGATUR RUTE APLIKASI UTAMA */
 export default function App() {
   return (
     <Router>
       <Routes>
-        {/* Redirect root ke dashboard */}
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
         
-        {/* Rute Publik */}
+        {/* RUTE MULTI HALAMAN PUBLIK DIBUNGKUS LAYOUT */}
+        <Route element={<PublicLayout />}>
+           <Route path="/" element={<Home />} />
+           <Route path="/features" element={<FeaturesPage />} />
+        </Route>
+
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         
-        {/* Rute Terproteksi */}
+        {/* RUTE TERPROTEKSI WAJIB AUTENTIKASI */}
         <Route 
           path="/dashboard" 
           element={
