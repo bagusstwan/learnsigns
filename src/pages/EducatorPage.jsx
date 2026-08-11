@@ -3,6 +3,13 @@ import { IconUsers, IconSearch, IconFileText, IconTarget, IconPlus, IconClose } 
 import AssignmentCard from '../components/AssignmentCard';
 import EvaluationModal from '../components/EvaluationModal';
 
+// Local SVG Icons for specific UI needs
+const IconUsersGroup = () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>;
+const IconSearchWhite = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>;
+const IconSearchGray = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>;
+const IconChevronLeft = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>;
+const IconChevronRight = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>;
+
 export default function EducatorPage() {
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
 
@@ -16,39 +23,40 @@ export default function EducatorPage() {
   const isTablet = windowWidth <= 1024 && windowWidth >= 768;
   const isMobile = windowWidth < 768;
 
-  const paddingMain = isDesktop ? '40px 48px' : isTablet ? '32px 32px' : '24px 16px';
+  const paddingMain = isDesktop ? '40px 64px' : isTablet ? '32px 32px' : '24px 16px';
   const layoutDirection = isDesktop ? 'row' : 'column';
-  const gridInputKolom = isMobile ? '1fr' : '1fr 1fr';
-  const headerFontSize = isMobile ? '22px' : '28px';
 
-  /* Manajemen Status API */
+  // API and Data States
   const [students, setStudents] = useState([]);
   const [assignments, setAssignments] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
-  /* Status Formulir */
+  // Form and Interaction States
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [formTitle, setFormTitle] = useState("");
   const [formTarget, setFormTarget] = useState("");
   const [formNotes, setFormNotes] = useState("");
   const [searchTaskQuery, setSearchTaskQuery] = useState("");
+  const [activeTab, setActiveTab] = useState('Delegasi Baru');
 
-  /* Status Modal Pemilihan Murid */
+  // Modal States
   const [isStudentModalOpen, setIsStudentModalOpen] = useState(false);
   const [searchStudentQuery, setSearchStudentQuery] = useState("");
-
-  /* Status Modal Penilaian (Evaluasi) */
   const [isEvalModalOpen, setIsEvalModalOpen] = useState(false);
   const [taskToEvaluate, setTaskToEvaluate] = useState(null);
   const [evalStars, setEvalStars] = useState(10); 
   const [evalFeedback, setEvalFeedback] = useState("");
   const [isEvaluating, setIsEvaluating] = useState(false);
 
+  // Pagination States
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 6;
+
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api/v1';
   const token = localStorage.getItem('token');
 
-  /* Mengambil Data Murid & Tugas */
+  // Fetch dashboard data on component mount
   const fetchDashboardData = async () => {
     try {
       const response = await fetch(`${API_BASE_URL}/educator/dashboard`, {
@@ -57,313 +65,364 @@ export default function EducatorPage() {
       });
       const resData = await response.json();
       if (response.ok && resData.status === 'success') {
-        setStudents(resData.data.students);
-        setAssignments(resData.data.assignments);
+        setStudents(resData.data.students || []);
+        setAssignments(resData.data.assignments || []);
       }
     } catch (err) {
-      console.error("Gagal memuat data:", err);
+      console.error("Failed to load dashboard data:", err);
     } finally {
       setIsLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetchDashboardData();
-  }, [API_BASE_URL, token]);
+  useEffect(() => { fetchDashboardData(); }, [API_BASE_URL, token]);
 
-  /* Menangani Pembuatan Penugasan Baru */
+  // Handle new assignment submission
   const handleCreateAssignment = async (e) => {
     e.preventDefault();
     if (!selectedStudent || !formTitle || !formTarget) {
-      alert("Mohon pilih murid dan lengkapi data tugas!");
-      return;
+      alert("Mohon pilih murid dan lengkapi data tugas!"); return;
     }
-
     setIsSubmitting(true);
     try {
       const response = await fetch(`${API_BASE_URL}/educator/assignments`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify({
-          student_id: selectedStudent.id,
-          title: formTitle,
-          target: formTarget,
-          notes: formNotes
-        })
+        body: JSON.stringify({ student_id: selectedStudent.id, title: formTitle, target: formTarget, notes: formNotes })
       });
-
       if (response.ok) {
         setFormTitle(""); setFormTarget(""); setFormNotes(""); setSelectedStudent(null);
         fetchDashboardData(); 
-      } else {
-        alert("Gagal menyimpan tugas.");
-      }
-    } catch (err) {
-      alert("Terjadi kesalahan koneksi server.");
-    } finally {
-      setIsSubmitting(false);
-    }
+      } else { alert("Gagal menyimpan tugas."); }
+    } catch (err) { alert("Terjadi kesalahan koneksi server."); } finally { setIsSubmitting(false); }
   };
 
-  /* Menangani Evaluasi Tugas (Memberi Nilai) */
+  // Open evaluation modal
   const openEvalModal = (task) => {
-    setTaskToEvaluate(task);
-    setEvalStars(10);
-    setEvalFeedback("");
-    setIsEvalModalOpen(true);
+    setTaskToEvaluate(task); setEvalStars(10); setEvalFeedback(""); setIsEvalModalOpen(true);
   };
 
+  // Handle evaluation submission
   const submitEvaluation = async (e) => {
     e.preventDefault();
-    if (evalStars < 1 || evalStars > 50) {
-      alert("Jumlah bintang harus antara 1 hingga 50!");
-      return;
-    }
-
     setIsEvaluating(true);
     try {
       const response = await fetch(`${API_BASE_URL}/educator/assignments/${taskToEvaluate.id}/evaluate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify({
-          stars_earned: evalStars,
-          feedback: evalFeedback
-        })
+        body: JSON.stringify({ stars_earned: evalStars, feedback: evalFeedback })
       });
-
       if (response.ok) {
-        setIsEvalModalOpen(false);
-        setTaskToEvaluate(null);
-        fetchDashboardData(); 
-      } else {
-        alert("Gagal mengirimkan penilaian.");
-      }
-    } catch (err) {
-      alert("Terjadi kesalahan koneksi server saat mengirim penilaian.");
-    } finally {
-      setIsEvaluating(false);
-    }
+        setIsEvalModalOpen(false); setTaskToEvaluate(null); fetchDashboardData(); 
+      } else { alert("Gagal mengirimkan penilaian."); }
+    } catch (err) { alert("Terjadi kesalahan koneksi server."); } finally { setIsEvaluating(false); }
   };
 
-  const filteredAssignments = assignments.filter(task => 
-    task.studentName.toLowerCase().includes(searchTaskQuery.toLowerCase()) || 
-    task.title.toLowerCase().includes(searchTaskQuery.toLowerCase())
-  );
+  // Filter assignments based on search query and active tab
+  const getFilteredAssignments = () => {
+    let filtered = assignments.filter(task => 
+      task.studentName?.toLowerCase().includes(searchTaskQuery.toLowerCase()) || 
+      task.title?.toLowerCase().includes(searchTaskQuery.toLowerCase())
+    );
+
+    if (activeTab === 'Riwayat Tugas') {
+      filtered = filtered.filter(task => task.status === 'evaluated' || task.status === 'completed');
+    } else if (activeTab === 'Monitoring') {
+      filtered = filtered.filter(task => task.status === 'pending' || task.status === 'submitted');
+    }
+    return filtered;
+  };
+
+  const processedAssignments = getFilteredAssignments();
+  
+  // Pagination calculation
+  const totalPages = Math.ceil(processedAssignments.length / itemsPerPage);
+  const paginatedAssignments = processedAssignments.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+  // Reset pagination when tab or search changes
+  useEffect(() => { setCurrentPage(1); }, [activeTab, searchTaskQuery]);
 
   const filteredStudents = students.filter(student => 
-    student.name.toLowerCase().includes(searchStudentQuery.toLowerCase()) ||
-    student.class.toLowerCase().includes(searchStudentQuery.toLowerCase())
+    student.name?.toLowerCase().includes(searchStudentQuery.toLowerCase()) ||
+    student.class?.toLowerCase().includes(searchStudentQuery.toLowerCase())
   );
 
   const handleSelectStudent = (student) => {
-    setSelectedStudent(student);
-    setIsStudentModalOpen(false);
-    setSearchStudentQuery("");
+    setSelectedStudent(student); setIsStudentModalOpen(false); setSearchStudentQuery("");
   };
 
-  /* TATA LETAK INPUT PREMIUM */
-  const inputStyle = { width: '100%', padding: '12px 14px 12px 40px', borderRadius: '8px', border: '1px solid #D1D5DB', fontSize: '14px', color: '#111827', boxSizing: 'border-box', outline: 'none', transition: 'all 0.2s ease', backgroundColor: '#FFFFFF', boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)' };
-  const inputFocus = (e) => { e.target.style.borderColor = '#111827'; e.target.style.boxShadow = '0 0 0 3px rgba(17, 24, 39, 0.1)'; };
-  const inputBlur = (e) => { e.target.style.borderColor = '#D1D5DB'; e.target.style.boxShadow = '0 1px 2px 0 rgba(0, 0, 0, 0.05)'; };
+  // Base input styles
+  const inputStyleBase = { width: '100%', padding: '16px 20px', borderRadius: '12px', border: '1px solid #E2E8F0', fontSize: '14px', color: '#0F172A', boxSizing: 'border-box', outline: 'none', transition: 'all 0.2s ease', backgroundColor: '#FFFFFF' };
+  const inputStyleWithIcon = { ...inputStyleBase, paddingLeft: '44px' };
+  
+  const inputFocus = (e) => { e.target.style.borderColor = '#0F172A'; e.target.style.boxShadow = '0 0 0 3px rgba(15, 23, 42, 0.05)'; };
+  const inputBlur = (e) => { e.target.style.borderColor = '#E2E8F0'; e.target.style.boxShadow = 'none'; };
 
   if (isLoading) {
     return (
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', backgroundColor: '#FAFAFA' }}>
-         <div style={{ width: '40px', height: '40px', border: '3px solid #EAEAEA', borderTop: '3px solid #111827', borderRadius: '50%', animation: 'spin 1s linear infinite', marginBottom: '16px' }}></div>
-         <p style={{ color: '#6B7280', fontWeight: '600' }}>Menyiapkan Ruang Pendidik...</p>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', backgroundColor: '#F8FAFC' }}>
+         <div style={{ width: '40px', height: '40px', border: '3px solid #E2E8F0', borderTop: '3px solid #0F172A', borderRadius: '50%', animation: 'spin 0.8s linear infinite', marginBottom: '16px' }}></div>
       </div>
     );
   }
 
   return (
-    <main style={{ flex: 1, display: 'flex', flexDirection: 'column', overflowY: 'auto', padding: paddingMain, boxSizing: 'border-box', backgroundColor: '#FAFAFA' }}>
+    <main style={{ flex: 1, display: 'flex', flexDirection: 'column', overflowY: 'auto', padding: paddingMain, boxSizing: 'border-box', backgroundColor: '#F8FAFC' }}>
       
-      {/* BAGIAN HEADER KONTROL GURU */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '32px', flexWrap: 'wrap', gap: '16px' }}>
-        <div style={{ flex: '1', minWidth: '250px' }}>
-          <h2 style={{ margin: '0 0 8px 0', fontSize: headerFontSize, fontWeight: '800', letterSpacing: '-0.8px', color: '#111827' }}>
-            Teacher Command Center
-          </h2>
-          <p style={{ margin: 0, color: '#6B7280', fontSize: '14px', maxWidth: '600px', lineHeight: '1.6' }}>
-            Manajemen pembelajaran terpersonalisasi. Delegasikan materi khusus secara spesifik untuk masing-masing murid.
-          </p>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', backgroundColor: '#FFFFFF', border: '1px solid #EAEAEA', padding: '10px 16px', borderRadius: '8px', boxShadow: '0 1px 2px rgba(0,0,0,0.02)' }}>
-          <IconUsers />
-          <span style={{ fontSize: '13px', fontWeight: '700', color: '#111827' }}>Akses Instruktur</span>
-        </div>
-      </div>
-
-      <div style={{ display: 'flex', flexDirection: layoutDirection, gap: '24px', alignItems: 'flex-start' }}>
+      <div style={{ maxWidth: '1400px', margin: '0 auto', width: '100%' }}>
         
-        {/* KOLOM KIRI: FORMULIR DELEGASI */}
-        <div style={{ flex: isDesktop ? '1.4' : 'none', width: '100%', backgroundColor: '#FFFFFF', border: '1px solid #EAEAEA', borderRadius: '12px', padding: isMobile ? '24px' : '32px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.03)', boxSizing: 'border-box' }}>
+        {/* Header and Capsule Tabs */}
+        <div style={{ marginBottom: '40px' }}>
+          <h1 style={{ margin: '0 0 16px 0', fontSize: isMobile ? '32px' : '42px', fontWeight: '800', letterSpacing: '-1px', color: '#0F172A' }}>
+            Teacher Command Center
+          </h1>
           
-          <div style={{ marginBottom: '28px', borderBottom: '1px solid #F3F4F6', paddingBottom: '16px' }}>
-            <h3 style={{ margin: 0, fontSize: '18px', fontWeight: '800', color: '#111827' }}>Delegasi Tugas Baru</h3>
-            <span style={{ fontSize: '13px', color: '#6B7280' }}>Konfigurasi sesi pembelajaran khusus untuk murid terpilih.</span>
+          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+            {['Delegasi Baru', 'Riwayat Tugas', 'Monitoring', 'Pengaturan'].map((tab) => (
+              <button 
+                key={tab} 
+                onClick={() => setActiveTab(tab)}
+                style={{ 
+                  padding: '8px 24px', 
+                  borderRadius: '999px', 
+                  border: '1px solid #E2E8F0', 
+                  backgroundColor: activeTab === tab ? '#0F172A' : '#FFFFFF', 
+                  color: activeTab === tab ? '#FFFFFF' : '#475569', 
+                  fontSize: '13px', 
+                  fontWeight: '600', 
+                  cursor: 'pointer',
+                  transition: 'all 0.2s'
+                }}
+              >
+                {tab}
+              </button>
+            ))}
           </div>
+        </div>
+
+        {/* Main Two-Column Layout */}
+        <div style={{ display: 'flex', flexDirection: layoutDirection, gap: '40px', alignItems: 'flex-start', width: '100%' }}>
           
-          <form onSubmit={handleCreateAssignment} style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-            
-            {/* TAHAP 1: PEMILIHAN MURID */}
-            <div>
-              <label style={{ fontSize: '12px', fontWeight: '700', color: '#374151', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block', marginBottom: '12px' }}>
-                1. Pilih Murid Target
-              </label>
+          {/* Left Column: Form (Sticky on Desktop) */}
+          {activeTab === 'Delegasi Baru' ? (
+            <div style={{ 
+              flex: isDesktop ? '1.1' : 'none', 
+              width: '100%', 
+              backgroundColor: '#FFFFFF', 
+              border: '1px solid #E2E8F0', 
+              borderRadius: '24px', 
+              padding: isMobile ? '24px' : '40px', 
+              boxSizing: 'border-box',
+              position: isDesktop ? 'sticky' : 'relative',
+              top: isDesktop ? '24px' : 'auto'
+            }}>
               
-              {!selectedStudent ? (
-                <button 
-                  type="button" 
-                  onClick={() => setIsStudentModalOpen(true)}
-                  style={{ width: '100%', padding: '16px', border: '1px dashed #D1D5DB', borderRadius: '8px', backgroundColor: '#F9FAFB', color: '#4B5563', fontSize: '14px', fontWeight: '600', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', transition: 'all 0.2s', boxShadow: 'inset 0 2px 4px 0 rgba(0, 0, 0, 0.02)' }}
-                  onMouseOver={(e) => { e.currentTarget.style.borderColor = '#111827'; e.currentTarget.style.color = '#111827'; e.currentTarget.style.backgroundColor = '#FFFFFF'; }}
-                  onMouseOut={(e) => { e.currentTarget.style.borderColor = '#D1D5DB'; e.currentTarget.style.color = '#4B5563'; e.currentTarget.style.backgroundColor = '#F9FAFB'; }}
-                >
-                  <IconUsers /> Cari & Pilih Murid dari Kelas Anda
-                </button>
-              ) : (
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px', border: '1px solid #EAEAEA', borderRadius: '8px', backgroundColor: '#FFFFFF', boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.05)' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <div style={{ width: '36px', height: '36px', borderRadius: '50%', backgroundColor: '#F3F4F6', color: '#374151', display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: '12px', fontWeight: '800' }}>
-                      {selectedStudent.initials}
+              <div style={{ marginBottom: '32px' }}>
+                <h3 style={{ margin: '0 0 8px 0', fontSize: '24px', fontWeight: '800', color: '#0F172A', letterSpacing: '-0.5px' }}>Delegasi Penugasan</h3>
+                <p style={{ margin: 0, fontSize: '14px', color: '#64748B', fontWeight: '400', lineHeight: '1.6' }}>
+                  Pilih murid dan tentukan modul pembelajaran yang sesuai dengan kebutuhan evaluasi mereka.
+                </p>
+              </div>
+              
+              <form onSubmit={handleCreateAssignment} style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+                
+                {/* Student Selection Container */}
+                <div>
+                  {!selectedStudent ? (
+                    <div 
+                      onClick={() => setIsStudentModalOpen(true)}
+                      style={{ border: '2px dashed #CBD5E1', borderRadius: '16px', padding: '40px 20px', textAlign: 'center', backgroundColor: '#F8FAFC', cursor: 'pointer', transition: 'all 0.2s' }}
+                      onMouseOver={(e) => { e.currentTarget.style.borderColor = '#0F172A'; e.currentTarget.style.backgroundColor = '#FFFFFF'; }}
+                      onMouseOut={(e) => { e.currentTarget.style.borderColor = '#CBD5E1'; e.currentTarget.style.backgroundColor = '#F8FAFC'; }}
+                    >
+                      <div style={{ width: '56px', height: '56px', backgroundColor: '#0F172A', color: 'white', borderRadius: '50%', margin: '0 auto 16px auto', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <IconUsersGroup />
+                      </div>
+                      <h4 style={{ margin: '0 0 8px 0', fontSize: '16px', fontWeight: '800', color: '#0F172A' }}>Cari & pilih murid dari kelas anda</h4>
+                      <p style={{ margin: 0, fontSize: '13px', color: '#64748B' }}>Daftar murid akan disesuaikan dengan otorisasi kelas Anda.</p>
                     </div>
-                    <div>
-                      <h4 style={{ margin: '0 0 2px 0', fontSize: '14px', fontWeight: '700', color: '#111827' }}>{selectedStudent.name}</h4>
-                      <p style={{ margin: 0, fontSize: '12px', color: '#6B7280', fontWeight: '500' }}>{selectedStudent.class}</p>
+                  ) : (
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '24px', border: '1px solid #E2E8F0', borderRadius: '16px', backgroundColor: '#FFFFFF', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.02)' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                        <div style={{ width: '48px', height: '48px', borderRadius: '50%', backgroundColor: '#0F172A', color: '#FFFFFF', display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: '16px', fontWeight: '800' }}>
+                          {selectedStudent.name?.charAt(0).toUpperCase()}
+                        </div>
+                        <div>
+                          <h4 style={{ margin: '0 0 4px 0', fontSize: '16px', fontWeight: '800', color: '#0F172A' }}>{selectedStudent.name}</h4>
+                          <p style={{ margin: 0, fontSize: '13px', color: '#64748B', fontWeight: '500' }}>Kelas: {selectedStudent.class}</p>
+                        </div>
+                      </div>
+                      <button 
+                        type="button" onClick={() => setIsStudentModalOpen(true)}
+                        style={{ background: '#F8FAFC', border: '1px solid #E2E8F0', padding: '8px 16px', borderRadius: '99px', fontSize: '13px', fontWeight: '700', color: '#0F172A', cursor: 'pointer', transition: 'all 0.2s' }}
+                        onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#E2E8F0'}
+                        onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#F8FAFC'}
+                      >
+                        Ganti Murid
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {/* Configuration Inputs */}
+                <div>
+                  <h4 style={{ margin: '0 0 16px 0', fontSize: '16px', fontWeight: '800', color: '#0F172A' }}>Konfigurasi Materi</h4>
+
+                  <div style={{ display: 'flex', gap: '16px', marginBottom: '16px', flexDirection: isMobile ? 'column' : 'row' }}>
+                    <div style={{ position: 'relative', flex: 1 }}>
+                      <div style={{ position: 'absolute', left: '16px', top: '16px', zIndex: 2 }}><IconFileText /></div>
+                      <input 
+                        type="text" value={formTitle} onChange={(e) => setFormTitle(e.target.value)}
+                        placeholder="Judul penugasan..." required
+                        style={inputStyleWithIcon} onFocus={inputFocus} onBlur={inputBlur}
+                      />
+                    </div>
+                    <div style={{ position: 'relative', flex: 1 }}>
+                      <div style={{ position: 'absolute', left: '16px', top: '16px', zIndex: 2 }}><IconTarget /></div>
+                      <input 
+                        type="text" value={formTarget} onChange={(e) => setFormTarget(e.target.value)}
+                        placeholder="Target huruf atau kata..." required
+                        style={inputStyleWithIcon} onFocus={inputFocus} onBlur={inputBlur}
+                      />
                     </div>
                   </div>
+
+                  <textarea 
+                    value={formNotes} onChange={(e) => setFormNotes(e.target.value)}
+                    placeholder="Instruksi tambahan atau pesan penyemangat untuk murid..." rows="4"
+                    style={{ ...inputStyleBase, resize: 'vertical', minHeight: '120px' }}
+                    onFocus={inputFocus} onBlur={inputBlur}
+                  ></textarea>
+                </div>
+
+                {/* Submit Button */}
+                <button 
+                  type="submit"
+                  disabled={!selectedStudent || isSubmitting}
+                  style={{ width: '100%', padding: '18px', backgroundColor: selectedStudent && !isSubmitting ? '#0F172A' : '#CBD5E1', color: '#FFFFFF', border: 'none', borderRadius: '12px', fontSize: '15px', fontWeight: '700', cursor: selectedStudent && !isSubmitting ? 'pointer' : 'not-allowed', transition: 'all 0.2s' }}
+                  onMouseOver={(e) => { if(selectedStudent && !isSubmitting) e.currentTarget.style.backgroundColor = '#1E293B'; }}
+                  onMouseOut={(e) => { if(selectedStudent && !isSubmitting) e.currentTarget.style.backgroundColor = '#0F172A'; }}
+                >
+                  {isSubmitting ? 'Memproses...' : 'Distribusikan tugas spesifik'}
+                </button>
+
+              </form>
+            </div>
+          ) : (
+            <div style={{ flex: isDesktop ? '1.1' : 'none', display: activeTab === 'Pengaturan' ? 'block' : 'none' }}>
+               {/* Placeholder for settings or future tabs */}
+               <div style={{ padding: '60px 24px', textAlign: 'center', backgroundColor: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: '24px' }}>
+                  <p style={{ fontSize: '15px', fontWeight: '600', color: '#64748B' }}>Menu {activeTab} sedang dalam tahap pengembangan.</p>
+               </div>
+            </div>
+          )}
+
+          {/* Right Column: Assignment Monitoring Area */}
+          {(activeTab !== 'Pengaturan') && (
+            <div style={{ flex: isDesktop ? '1' : 'none', display: 'flex', flexDirection: 'column', width: '100%' }}>
+              
+              {/* Premium Search Bar */}
+              <div style={{ display: 'flex', backgroundColor: '#FFFFFF', borderRadius: '999px', border: '1px solid #E2E8F0', padding: '6px', overflow: 'hidden', marginBottom: '32px', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
+                <input 
+                  type="text" placeholder="Cari penugasan siswa..." 
+                  value={searchTaskQuery} onChange={(e) => setSearchTaskQuery(e.target.value)} 
+                  style={{ flex: 1, border: 'none', outline: 'none', padding: '10px 20px', fontSize: '14px', backgroundColor: 'transparent', color: '#0F172A' }} 
+                />
+                <button style={{ backgroundColor: '#0F172A', color: 'white', border: 'none', borderRadius: '999px', padding: '10px 28px', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '14px', fontWeight: '600' }}>
+                  <IconSearchWhite /> Search
+                </button>
+              </div>
+
+              {/* Assignment Cards List */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                {paginatedAssignments.length > 0 ? paginatedAssignments.map((task) => (
+                  <AssignmentCard key={task.id} task={task} onOpenEvalModal={openEvalModal} />
+                )) : (
+                  <div style={{ padding: '80px 24px', textAlign: 'center' }}>
+                    <div style={{ width: '64px', height: '64px', borderRadius: '50%', backgroundColor: '#F1F5F9', display: 'flex', justifyContent: 'center', alignItems: 'center', margin: '0 auto 16px auto' }}>
+                      <IconSearchGray />
+                    </div>
+                    <p style={{ fontSize: '15px', fontWeight: '600', color: '#64748B', margin: 0 }}>Belum ada data penugasan.</p>
+                  </div>
+                )}
+              </div>
+              
+              {/* Functional Pagination UI */}
+              {totalPages > 1 && (
+                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '16px', marginTop: '40px', color: '#64748B', fontSize: '14px', fontWeight: '600' }}>
                   <button 
-                    type="button" 
-                    onClick={() => setIsStudentModalOpen(true)}
-                    style={{ background: 'none', border: '1px solid #D1D5DB', padding: '6px 12px', borderRadius: '6px', fontSize: '12px', fontWeight: '600', color: '#374151', cursor: 'pointer', backgroundColor: '#FFFFFF', transition: 'all 0.2s' }}
-                    onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#F3F4F6'}
-                    onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#FFFFFF'}
+                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                    disabled={currentPage === 1}
+                    style={{ background: 'none', border: 'none', cursor: currentPage === 1 ? 'not-allowed' : 'pointer', color: currentPage === 1 ? '#CBD5E1' : '#0F172A', display: 'flex' }}
                   >
-                    Ganti
+                    <IconChevronLeft />
+                  </button>
+                  
+                  {Array.from({ length: totalPages }).map((_, i) => (
+                    <span 
+                      key={i} 
+                      onClick={() => setCurrentPage(i + 1)}
+                      style={{ cursor: 'pointer', color: currentPage === i + 1 ? '#0F172A' : '#64748B', fontWeight: currentPage === i + 1 ? '800' : '600' }}
+                    >
+                      {i + 1}
+                    </span>
+                  ))}
+
+                  <button 
+                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                    disabled={currentPage === totalPages}
+                    style={{ background: 'none', border: 'none', cursor: currentPage === totalPages ? 'not-allowed' : 'pointer', color: currentPage === totalPages ? '#CBD5E1' : '#0F172A', display: 'flex' }}
+                  >
+                    <IconChevronRight />
                   </button>
                 </div>
               )}
+              
             </div>
+          )}
 
-            {/* TAHAP 2: RINCIAN MATERI */}
-            <div>
-              <label style={{ fontSize: '12px', fontWeight: '700', color: '#374151', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block', marginBottom: '12px' }}>
-                2. Konfigurasi Materi
-              </label>
-
-              <div style={{ display: 'grid', gridTemplateColumns: gridInputKolom, gap: '16px', marginBottom: '16px' }}>
-                <div style={{ position: 'relative' }}>
-                  <div style={{ position: 'absolute', left: '14px', top: '14px' }}><IconFileText /></div>
-                  <input 
-                    type="text" value={formTitle} onChange={(e) => setFormTitle(e.target.value)}
-                    placeholder="Judul Penugasan..." required
-                    style={inputStyle} onFocus={inputFocus} onBlur={inputBlur}
-                  />
-                </div>
-                <div style={{ position: 'relative' }}>
-                  <div style={{ position: 'absolute', left: '14px', top: '14px' }}><IconTarget /></div>
-                  <input 
-                    type="text" value={formTarget} onChange={(e) => setFormTarget(e.target.value)}
-                    placeholder="Target Huruf/Kata..." required
-                    style={inputStyle} onFocus={inputFocus} onBlur={inputBlur}
-                  />
-                </div>
-              </div>
-
-              <div style={{ position: 'relative' }}>
-                <textarea 
-                  value={formNotes} onChange={(e) => setFormNotes(e.target.value)}
-                  placeholder="Instruksi tambahan atau pesan penyemangat untuk murid..." rows="3"
-                  style={{ ...inputStyle, padding: '14px 16px', resize: 'vertical' }}
-                  onFocus={inputFocus} onBlur={inputBlur}
-                ></textarea>
-              </div>
-            </div>
-
-            {/* Tombol Eksekusi Aksi */}
-            <div style={{ borderTop: '1px solid #F3F4F6', paddingTop: '20px' }}>
-              <button 
-                type="submit"
-                disabled={!selectedStudent || isSubmitting}
-                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', width: '100%', padding: '14px', backgroundColor: selectedStudent && !isSubmitting ? '#111827' : '#F3F4F6', color: selectedStudent && !isSubmitting ? '#FFFFFF' : '#9CA3AF', border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: '700', cursor: selectedStudent && !isSubmitting ? 'pointer' : 'not-allowed', transition: 'all 0.2s', boxShadow: selectedStudent && !isSubmitting ? '0 4px 6px -1px rgba(0,0,0,0.1)' : 'none' }}
-                onMouseOver={(e) => { if(selectedStudent && !isSubmitting) e.currentTarget.style.backgroundColor = '#374151'; }}
-                onMouseOut={(e) => { if(selectedStudent && !isSubmitting) e.currentTarget.style.backgroundColor = '#111827'; }}
-              >
-                {isSubmitting ? 'Menyimpan...' : <><IconPlus /> Distribusikan Tugas Spesifik</>}
-              </button>
-            </div>
-
-          </form>
         </div>
-
-        {/* KOLOM KANAN: MONITORING & PENILAIAN TUGAS */}
-        <div style={{ flex: isDesktop ? '1' : 'none', display: 'flex', flexDirection: 'column', width: '100%', minHeight: isDesktop ? '520px' : 'auto' }}>
-          
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
-            <span style={{ fontSize: '13px', fontWeight: '800', color: '#111827', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Pemantauan Delegasi Tugas</span>
-            <div style={{ position: 'relative', width: isMobile ? '100%' : '200px' }}>
-              <div style={{ position: 'absolute', left: '12px', top: '10px' }}><IconSearch /></div>
-              <input type="text" placeholder="Cari penugasan..." value={searchTaskQuery} onChange={(e) => setSearchTaskQuery(e.target.value)} style={{ width: '100%', padding: '10px 14px 10px 36px', borderRadius: '8px', border: '1px solid #EAEAEA', fontSize: '13px', outline: 'none', boxSizing: 'border-box', backgroundColor: '#FFFFFF', transition: 'all 0.2s' }} onFocus={(e) => { e.target.style.borderColor = '#111827'; e.target.style.boxShadow = '0 0 0 3px rgba(17, 24, 39, 0.05)'; }} onBlur={(e) => { e.target.style.borderColor = '#EAEAEA'; e.target.style.boxShadow = 'none'; }} />
-            </div>
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            {filteredAssignments.length > 0 ? filteredAssignments.map((task) => (
-              <AssignmentCard key={task.id} task={task} onOpenEvalModal={openEvalModal} />
-            )) : (
-              <div style={{ padding: '40px 20px', textAlign: 'center', backgroundColor: '#FFFFFF', border: '1px dashed #D1D5DB', borderRadius: '12px' }}>
-                <p style={{ fontSize: '14px', fontWeight: '600', color: '#6B7280', margin: 0 }}>Belum ada data penugasan.</p>
-              </div>
-            )}
-          </div>
-        </div>
-
       </div>
 
-      {/* MODAL PEMILIHAN MURID */}
+      {/* Student Selection Modal */}
       {isStudentModalOpen && (
-        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(17, 24, 39, 0.4)', backdropFilter: 'blur(4px)', zIndex: 100, display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '16px', animation: 'fadeIn 0.2s ease-out' }}>
-          <div style={{ backgroundColor: '#FFFFFF', width: '100%', maxWidth: '500px', borderRadius: '16px', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25), 0 0 0 1px rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column', maxHeight: '85vh', overflow: 'hidden', animation: 'scaleUp 0.2s ease-out' }}>
-            <div style={{ padding: '20px 24px', borderBottom: '1px solid #EAEAEA', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#FAFAFA' }}>
+        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(15, 23, 42, 0.4)', backdropFilter: 'blur(4px)', zIndex: 100, display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '16px' }}>
+          <div style={{ backgroundColor: '#FFFFFF', width: '100%', maxWidth: '480px', borderRadius: '24px', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)', display: 'flex', flexDirection: 'column', maxHeight: '80vh', overflow: 'hidden' }}>
+            <div style={{ padding: '24px', borderBottom: '1px solid #F1F5F9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
-                <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '800', color: '#111827' }}>Pilih Murid Target</h3>
-                <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: '#6B7280' }}>Hanya menampilkan murid dari institusi/kelas Anda.</p>
+                <h3 style={{ margin: 0, fontSize: '18px', fontWeight: '800', color: '#0F172A' }}>Pilih Murid Target</h3>
               </div>
-              <button onClick={() => setIsStudentModalOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9CA3AF', padding: '4px', borderRadius: '6px', transition: 'all 0.2s' }} onMouseOver={(e) => { e.currentTarget.style.color = '#111827'; e.currentTarget.style.backgroundColor = '#F3F4F6'; }} onMouseOut={(e) => { e.currentTarget.style.color = '#9CA3AF'; e.currentTarget.style.backgroundColor = 'transparent'; }}>
+              <button onClick={() => setIsStudentModalOpen(false)} style={{ background: '#F1F5F9', border: 'none', cursor: 'pointer', padding: '8px', borderRadius: '50%', display: 'flex' }}>
                 <IconClose />
               </button>
             </div>
             <div style={{ padding: '24px', overflowY: 'auto', flex: 1 }}>
               <div style={{ position: 'relative', marginBottom: '20px' }}>
-                <div style={{ position: 'absolute', left: '14px', top: '12px' }}><IconSearch /></div>
+                <div style={{ position: 'absolute', left: '16px', top: '16px', zIndex: 2 }}><IconSearchGray /></div>
                 <input 
-                  type="text" placeholder="Cari nama murid atau kelas..." 
+                  type="text" placeholder="Cari nama murid..." 
                   value={searchStudentQuery} onChange={(e) => setSearchStudentQuery(e.target.value)}
-                  style={inputStyle} onFocus={inputFocus} onBlur={inputBlur}
+                  style={inputStyleWithIcon} onFocus={inputFocus} onBlur={inputBlur}
                 />
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 {filteredStudents.length > 0 ? filteredStudents.map((student) => (
                   <div 
-                    key={student.id}
-                    onClick={() => handleSelectStudent(student)}
-                    style={{ padding: '12px 16px', borderRadius: '8px', border: '1px solid #EAEAEA', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '16px', transition: 'all 0.2s' }}
-                    onMouseOver={(e) => { e.currentTarget.style.borderColor = '#111827'; e.currentTarget.style.backgroundColor = '#F9FAFB'; }}
-                    onMouseOut={(e) => { e.currentTarget.style.borderColor = '#EAEAEA'; e.currentTarget.style.backgroundColor = 'transparent'; }}
+                    key={student.id} onClick={() => handleSelectStudent(student)}
+                    style={{ padding: '16px', borderRadius: '16px', border: '1px solid #E2E8F0', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '16px', transition: 'all 0.2s' }}
+                    onMouseOver={(e) => { e.currentTarget.style.borderColor = '#0F172A'; e.currentTarget.style.backgroundColor = '#F8FAFC'; }}
+                    onMouseOut={(e) => { e.currentTarget.style.borderColor = '#E2E8F0'; e.currentTarget.style.backgroundColor = 'transparent'; }}
                   >
-                    <div style={{ width: '40px', height: '40px', borderRadius: '50%', backgroundColor: '#F3F4F6', color: '#4B5563', display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: '13px', fontWeight: '800' }}>
-                      {student.initials}
+                    <div style={{ width: '42px', height: '42px', borderRadius: '50%', backgroundColor: '#0F172A', color: '#FFFFFF', display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: '14px', fontWeight: '800' }}>
+                      {student.name?.charAt(0).toUpperCase()}
                     </div>
                     <div>
-                      <h4 style={{ margin: 0, fontSize: '14px', fontWeight: '700', color: '#111827' }}>{student.name}</h4>
-                      <p style={{ margin: '2px 0 0 0', fontSize: '12px', color: '#6B7280', fontWeight: '500' }}>Kelas: {student.class}</p>
+                      <h4 style={{ margin: 0, fontSize: '15px', fontWeight: '800', color: '#0F172A' }}>{student.name}</h4>
+                      <p style={{ margin: '2px 0 0 0', fontSize: '13px', color: '#64748B', fontWeight: '500' }}>{student.class}</p>
                     </div>
                   </div>
                 )) : (
-                  <div style={{ padding: '32px 0', textAlign: 'center' }}>
-                    <p style={{ margin: 0, fontSize: '14px', color: '#6B7280', fontWeight: '500' }}>Tidak ada murid yang ditemukan.</p>
-                  </div>
+                  <p style={{ textAlign: 'center', fontSize: '14px', color: '#64748B' }}>Tidak ada murid ditemukan.</p>
                 )}
               </div>
             </div>
@@ -371,22 +430,15 @@ export default function EducatorPage() {
         </div>
       )}
 
-      {/* MODAL EVALUASI KINERJA (KOMPONEN EKSTERNAL) */}
+      {/* Evaluation Drawer Modal */}
       <EvaluationModal 
-        isOpen={isEvalModalOpen} 
-        onClose={() => setIsEvalModalOpen(false)} 
-        task={taskToEvaluate} 
-        evalStars={evalStars} 
-        setEvalStars={setEvalStars} 
-        evalFeedback={evalFeedback} 
-        setEvalFeedback={setEvalFeedback} 
-        onSubmit={submitEvaluation} 
-        isEvaluating={isEvaluating} 
+        isOpen={isEvalModalOpen} onClose={() => setIsEvalModalOpen(false)} 
+        task={taskToEvaluate} evalStars={evalStars} setEvalStars={setEvalStars} 
+        evalFeedback={evalFeedback} setEvalFeedback={setEvalFeedback} 
+        onSubmit={submitEvaluation} isEvaluating={isEvaluating} 
       />
 
       <style>{`
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes scaleUp { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
       `}</style>
     </main>

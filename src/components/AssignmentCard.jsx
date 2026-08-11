@@ -1,59 +1,95 @@
-import { IconCheckCircle, IconStar } from './Icons';
+import React from 'react';
+import PropTypes from 'prop-types';
+
+const IconClock = () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>;
+const IconCheck = () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>;
 
 export default function AssignmentCard({ task, onOpenEvalModal }) {
-  return (
-    <div style={{ backgroundColor: '#FFFFFF', border: '1px solid #EAEAEA', borderRadius: '12px', padding: '24px', transition: 'all 0.2s', boxShadow: '0 1px 3px rgba(0,0,0,0.03)' }} onMouseOver={(e) => { e.currentTarget.style.borderColor = '#D1D5DB'; e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0,0,0,0.05)'; }} onMouseOut={(e) => { e.currentTarget.style.borderColor = '#EAEAEA'; e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.03)'; }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <div style={{ width: '28px', height: '28px', borderRadius: '6px', backgroundColor: '#F3F4F6', color: '#374151', display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: '11px', fontWeight: '800', border: '1px solid #E5E7EB' }}>
-            {task.studentName.split(' ').map(n => n[0]).join('').substring(0, 2)}
-          </div>
-          <span style={{ fontSize: '14px', fontWeight: '700', color: '#111827' }}>{task.studentName}</span>
-        </div>
-        <span style={{ fontSize: '11px', fontWeight: '700', padding: '4px 10px', borderRadius: '6px', backgroundColor: task.status === 'Selesai Dinilai' ? '#ECFDF5' : '#FEF3C7', color: task.status === 'Selesai Dinilai' ? '#059669' : '#D97706', border: `1px solid ${task.status === 'Selesai Dinilai' ? '#A7F3D0' : '#FDE68A'}` }}>
-          {task.status}
-        </span>
-      </div>
-      
-      <h4 style={{ margin: '0 0 8px 0', fontSize: '16px', fontWeight: '800', color: '#111827' }}>{task.title}</h4>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
-        <span style={{ fontSize: '12px', fontWeight: '600', color: '#4B5563', backgroundColor: '#F3F4F6', padding: '4px 8px', borderRadius: '4px', border: '1px solid #E5E7EB' }}>Target: {task.target}</span>
-      </div>
-      
-      {task.notes && (
-        <div style={{ margin: '0 0 20px 0', fontSize: '13px', color: '#4B5563', lineHeight: '1.6', backgroundColor: '#FAFAFA', padding: '12px 16px', borderRadius: '0 8px 8px 0', borderLeft: '3px solid #111827' }}>
-          {task.notes}
-        </div>
-      )}
+  // Pengecekan Status Tangguh (Anti-Bug / Toleransi Format API)
+  const statusStr = String(task.status || '').toLowerCase();
+  
+  // Deteksi jika sudah dinilai: cek status text ATAU jika API mengembalikan ada nilai bintang (stars_earned)
+  const isCompleted = statusStr === 'evaluated' || statusStr === 'completed' || statusStr === 'selesai' || task.stars_earned > 0 || task.is_evaluated;
+  
+  // Deteksi jika murid sudah mengumpulkan tapi guru belum menilai
+  const isSubmitted = statusStr === 'submitted' || statusStr === 'menunggu';
 
-      {/* Area Evaluasi */}
-      <div style={{ borderTop: '1px solid #F3F4F6', paddingTop: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div style={{ fontSize: '12px', color: '#9CA3AF', fontWeight: '500' }}>
-          {task.date}
+  // Dinamisasi Warna Badge Status Enterprise
+  let badgeText = 'Belum dikerjakan';
+  let badgeColor = '#64748B'; // Slate 500 (Abu-abu)
+  let badgeBorder = '#E2E8F0'; 
+  let badgeBg = '#FFFFFF';
+
+  if (isCompleted) {
+    badgeText = 'Selesai Dinilai';
+    badgeColor = '#10B981'; // Emerald 500 (Hijau)
+    badgeBorder = '#A7F3D0';
+    badgeBg = '#ECFDF5';
+  } else if (isSubmitted) {
+    badgeText = 'Menunggu Penilaian';
+    badgeColor = '#F59E0B'; // Amber 500 (Oranye)
+    badgeBorder = '#FDE68A';
+    badgeBg = '#FFFBEB';
+  }
+
+  return (
+    <div style={{ backgroundColor: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: '20px', padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px', boxShadow: '0 2px 4px rgba(0,0,0,0.01)' }}>
+      
+      {/* Header Kartu: Profil & Badge */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          {/* Avatar Placeholder */}
+          <div style={{ width: '46px', height: '46px', borderRadius: '50%', backgroundColor: '#0F172A', color: '#FFFFFF', display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: '16px', fontWeight: '800' }}>
+            {task.studentName?.charAt(0).toUpperCase() || 'S'}
+          </div>
+          <div>
+            <h4 style={{ margin: '0 0 2px 0', fontSize: '15px', fontWeight: '800', color: '#0F172A' }}>{task.studentName}</h4>
+            <p style={{ margin: 0, fontSize: '12px', color: '#64748B', fontWeight: '500' }}>{task.studentName?.toLowerCase().replace(' ', '')}@gmail.com</p>
+          </div>
         </div>
         
-        {task.status === 'Belum Dikerjakan' ? (
-          <button 
-            onClick={() => onOpenEvalModal(task)}
-            style={{ padding: '8px 16px', backgroundColor: '#111827', color: 'white', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', transition: 'all 0.2s' }}
-            onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#374151'}
-            onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#111827'}
-          >
-            <IconCheckCircle /> Beri Nilai
-          </button>
-        ) : (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#D97706', fontWeight: '800', fontSize: '14px', backgroundColor: '#FFFBEB', padding: '6px 12px', borderRadius: '20px', border: '1px solid #FEF3C7' }}>
-            <IconStar /> +{task.stars_earned} Bintang
-          </div>
-        )}
+        {/* Badge Status Dinamis */}
+        <div style={{ padding: '6px 14px', border: `1px solid ${badgeBorder}`, backgroundColor: badgeBg, borderRadius: '999px', fontSize: '11px', fontWeight: '800', color: badgeColor, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+          {badgeText}
+        </div>
       </div>
 
-      {/* Menampilkan Umpan Balik */}
-      {task.status === 'Selesai Dinilai' && task.feedback && (
-        <div style={{ marginTop: '16px', padding: '12px', backgroundColor: '#F9FAFB', borderRadius: '8px', border: '1px solid #EAEAEA', fontSize: '13px', color: '#374151' }}>
-          <strong style={{ color: '#111827' }}>Catatan Evaluasi:</strong> <br/> {task.feedback}
-        </div>
-      )}
+      {/* Info Modul */}
+      <div>
+        <span style={{ display: 'block', fontSize: '11px', color: '#94A3B8', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px' }}>Modul Yang Dikerjakan</span>
+        <h3 style={{ margin: 0, fontSize: '18px', fontWeight: '800', color: '#0F172A' }}>{task.title}</h3>
+      </div>
+
+      {/* Kotak Catatan / Instruksi */}
+      <div style={{ backgroundColor: '#F8FAFC', padding: '16px', borderRadius: '12px', fontSize: '14px', color: '#475569', fontWeight: '500', lineHeight: '1.6', border: '1px solid #F1F5F9' }}>
+        {task.notes || 'Selesaikan tantangan ini dengan akurasi tinggi di depan kamera untuk mendapatkan penilaian terbaik.'}
+      </div>
+
+      {/* Tombol Aksi */}
+      <div style={{ display: 'flex', gap: '12px', marginTop: '4px' }}>
+        <button 
+          style={{ flex: 1, padding: '12px', backgroundColor: '#FFFFFF', border: '1px solid #CBD5E1', borderRadius: '999px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontSize: '13px', fontWeight: '700', color: '#475569', cursor: 'pointer', transition: '0.2s' }}
+          onMouseOver={e => e.currentTarget.style.backgroundColor = '#F8FAFC'}
+          onMouseOut={e => e.currentTarget.style.backgroundColor = '#FFFFFF'}
+        >
+          <IconClock /> Kirim Pengingat
+        </button>
+        <button 
+          onClick={() => onOpenEvalModal(task)}
+          disabled={isCompleted}
+          style={{ flex: 1, padding: '12px', backgroundColor: isCompleted ? '#94A3B8' : '#0F172A', border: 'none', borderRadius: '999px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontSize: '13px', fontWeight: '700', color: '#FFFFFF', cursor: isCompleted ? 'not-allowed' : 'pointer', transition: '0.2s', boxShadow: isCompleted ? 'none' : '0 4px 6px -1px rgba(15, 23, 42, 0.2)' }}
+          onMouseOver={e => { if(!isCompleted) e.currentTarget.style.backgroundColor = '#1E293B' }}
+          onMouseOut={e => { if(!isCompleted) e.currentTarget.style.backgroundColor = '#0F172A' }}
+        >
+          <IconCheck /> {isCompleted ? 'Sudah Dinilai' : 'Beri Penilaian'}
+        </button>
+      </div>
+
     </div>
   );
 }
+
+AssignmentCard.propTypes = {
+  task: PropTypes.object.isRequired,
+  onOpenEvalModal: PropTypes.func.isRequired,
+};
