@@ -3,14 +3,15 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer 
 } from 'recharts';
 
-/* --- KOMPONEN IKON PREMIUM --- */
-const IconStarWhite = () => <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>;
-const IconCheckShieldWhite = () => <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><polyline points="9 12 11 14 15 10"></polyline></svg>;
-const IconChartLineWhite = () => <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>;
+/** Premium Vector Icons */
+const IconStarWhite = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>;
+const IconCheckShieldWhite = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><polyline points="9 12 11 14 15 10"></polyline></svg>;
+const IconChartLineWhite = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>;
 const IconArrowUpRight = () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg>;
 const IconClose = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>;
 const IconUser = () => <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>;
 const IconStarOrange = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="#F59E0B" stroke="#F59E0B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>;
+const IconCheckGreen = () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10B981" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>;
 
 export default function ProgressPage() {
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
@@ -29,7 +30,7 @@ export default function ProgressPage() {
   const gridStats = isMobile ? '1fr' : 'repeat(3, 1fr)';
   const gridLogs = isDesktop ? '1fr 1fr' : '1fr';
 
-  /* --- MANAJEMEN STATE API --- */
+  /** Application Data States */
   const [dashboardData, setDashboardData] = useState({
     total_stars: 0,
     average_accuracy: 0,
@@ -47,6 +48,7 @@ export default function ProgressPage() {
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api/v1';
   const token = localStorage.getItem('token');
 
+  /** External Data Retrieval */
   useEffect(() => {
     const fetchDashboardStats = async () => {
       try {
@@ -64,10 +66,10 @@ export default function ProgressPage() {
         if (response.ok && resData.status === 'success') {
           setDashboardData(resData.data);
         } else {
-          setApiError("Gagal mengambil data dari peladen utama.");
+          setApiError("Failed to fetch data from the primary server.");
         }
       } catch (err) {
-        setApiError("Koneksi jaringan terputus.");
+        setApiError("Network connection interrupted.");
       } finally {
         setIsLoading(false);
       }
@@ -76,7 +78,7 @@ export default function ProgressPage() {
     fetchDashboardStats();
   }, [API_BASE_URL, token]);
 
-  /* Kustomisasi Tooltip Recharts */
+  /** Custom Recharts Tooltip Configuration */
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
       const dayData = payload[0].payload;
@@ -103,6 +105,7 @@ export default function ProgressPage() {
     return null;
   };
 
+  /** Loading State Render */
   if (isLoading) {
     return (
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', backgroundColor: '#F8FAFC' }}>
@@ -111,6 +114,7 @@ export default function ProgressPage() {
     );
   }
 
+  /** Error State Render */
   if (apiError) {
     return (
       <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#F8FAFC' }}>
@@ -122,11 +126,11 @@ export default function ProgressPage() {
   return (
     <main style={{ flex: 1, display: 'flex', flexDirection: 'column', overflowY: 'auto', overflowX: 'hidden', backgroundColor: '#F8FAFC', padding: paddingMain, boxSizing: 'border-box' }}>
       
-      <div style={{ maxWidth: '1200px', margin: '0 auto', width: '100%', display: 'flex', flexDirection: 'column', gap: '36px' }}>
+      <div style={{ maxWidth: '1200px', margin: '0 auto', width: '100%', display: 'flex', flexDirection: 'column', gap: '32px' }}>
         
-        {/* SECTION 1: HEADER */}
+        {/** Page Title Section */}
         <div>
-          <h1 style={{ margin: '0 0 12px 0', fontSize: isMobile ? '32px' : '42px', fontWeight: '800', letterSpacing: '-1px', color: '#0F172A' }}>
+          <h1 style={{ margin: '0 0 12px 0', fontSize: isMobile ? '28px' : '36px', fontWeight: '800', letterSpacing: '-1px', color: '#0F172A' }}>
             Monitoring Perkembangan Murid
           </h1>
           <p style={{ margin: 0, color: '#475569', fontSize: '15px', maxWidth: '640px', lineHeight: '1.6' }}>
@@ -134,85 +138,81 @@ export default function ProgressPage() {
           </p>
         </div>
 
-        {/* SECTION 2: 3 STATS CARDS (ENTERPRISE DESIGN) */}
+        {/** Statistical Overview Cards */}
         <div style={{ display: 'grid', gridTemplateColumns: gridStats, gap: '24px' }}>
           
-          {/* Card 1: Total Bintang */}
           <div 
             onClick={() => setIsStarModalOpen(true)}
-            style={{ backgroundColor: '#FFFFFF', padding: '32px', borderRadius: '24px', border: '1px solid #E2E8F0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.02)', display: 'flex', flexDirection: 'column', position: 'relative', cursor: 'pointer', transition: 'all 0.2s ease' }}
+            style={{ backgroundColor: '#FFFFFF', padding: '24px', borderRadius: '20px', border: '1px solid #E2E8F0', boxShadow: '0 2px 4px -1px rgba(0,0,0,0.02)', display: 'flex', flexDirection: 'column', position: 'relative', cursor: 'pointer', transition: 'all 0.2s ease', boxSizing: 'border-box' }}
             onMouseOver={(e) => { e.currentTarget.style.borderColor = '#CBD5E1'; e.currentTarget.style.boxShadow = '0 10px 15px -3px rgba(0,0,0,0.05)'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
-            onMouseOut={(e) => { e.currentTarget.style.borderColor = '#E2E8F0'; e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0,0,0,0.02)'; e.currentTarget.style.transform = 'translateY(0)'; }}
+            onMouseOut={(e) => { e.currentTarget.style.borderColor = '#E2E8F0'; e.currentTarget.style.boxShadow = '0 2px 4px -1px rgba(0,0,0,0.02)'; e.currentTarget.style.transform = 'translateY(0)'; }}
           >
             <div style={{ display: 'flex', alignItems: 'center' }}>
-               <div style={{ width: '52px', height: '52px', backgroundColor: '#0F172A', borderRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFFFFF' }}>
+               <div style={{ width: '44px', height: '44px', backgroundColor: '#0F172A', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFFFFF' }}>
                   <IconStarWhite />
                </div>
-               <span style={{ fontSize: '18px', fontWeight: '700', color: '#0F172A', marginLeft: '16px' }}>Total Bintang</span>
+               <span style={{ fontSize: '16px', fontWeight: '700', color: '#0F172A', marginLeft: '14px' }}>Total Bintang</span>
             </div>
             
-            {/* Arrow Button Indicator */}
-            <div style={{ position: 'absolute', top: '32px', right: '32px', width: '32px', height: '32px', borderRadius: '50%', border: '1px solid #E2E8F0', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#94A3B8' }}>
+            <div style={{ position: 'absolute', top: '24px', right: '24px', width: '30px', height: '30px', borderRadius: '50%', border: '1px solid #E2E8F0', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#94A3B8' }}>
                <IconArrowUpRight />
             </div>
 
-            <div style={{ marginTop: '36px', display: 'flex', alignItems: 'baseline' }}>
-               <span style={{ fontSize: '48px', fontWeight: '800', color: '#0F172A', lineHeight: '1', letterSpacing: '-1px' }}>
+            <div style={{ marginTop: '24px', display: 'flex', alignItems: 'baseline' }}>
+               <span style={{ fontSize: '36px', fontWeight: '800', color: '#0F172A', lineHeight: '1', letterSpacing: '-1px' }}>
                  {dashboardData.total_stars.toLocaleString('id-ID')}
                </span>
-               <span style={{ fontSize: '18px', fontWeight: '600', color: '#475569', marginLeft: '12px' }}>Star Murid</span>
+               <span style={{ fontSize: '15px', fontWeight: '600', color: '#475569', marginLeft: '10px' }}>Star Murid</span>
             </div>
           </div>
 
-          {/* Card 2: Rata-Rata Akurasi */}
-          <div style={{ backgroundColor: '#FFFFFF', padding: '32px', borderRadius: '24px', border: '1px solid #E2E8F0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.02)', display: 'flex', flexDirection: 'column' }}>
+          <div style={{ backgroundColor: '#FFFFFF', padding: '24px', borderRadius: '20px', border: '1px solid #E2E8F0', boxShadow: '0 2px 4px -1px rgba(0,0,0,0.02)', display: 'flex', flexDirection: 'column', boxSizing: 'border-box' }}>
             <div style={{ display: 'flex', alignItems: 'center' }}>
-               <div style={{ width: '52px', height: '52px', backgroundColor: '#0F172A', borderRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFFFFF' }}>
+               <div style={{ width: '44px', height: '44px', backgroundColor: '#0F172A', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFFFFF' }}>
                   <IconCheckShieldWhite />
                </div>
-               <span style={{ fontSize: '18px', fontWeight: '700', color: '#0F172A', marginLeft: '16px' }}>Rata-Rata Akurasi</span>
+               <span style={{ fontSize: '16px', fontWeight: '700', color: '#0F172A', marginLeft: '14px' }}>Rata-Rata Akurasi</span>
             </div>
 
-            <div style={{ marginTop: '36px', display: 'flex', alignItems: 'baseline' }}>
-               <span style={{ fontSize: '48px', fontWeight: '800', color: '#0F172A', lineHeight: '1', letterSpacing: '-1px' }}>
-                 {dashboardData.average_accuracy} <span style={{ fontSize: '36px' }}>%</span>
+            <div style={{ marginTop: '24px', display: 'flex', alignItems: 'baseline' }}>
+               <span style={{ fontSize: '36px', fontWeight: '800', color: '#0F172A', lineHeight: '1', letterSpacing: '-1px' }}>
+                 {dashboardData.average_accuracy} <span style={{ fontSize: '24px' }}>%</span>
                </span>
-               <span style={{ fontSize: '18px', fontWeight: '600', color: '#475569', marginLeft: '12px' }}>Akurasi</span>
+               <span style={{ fontSize: '15px', fontWeight: '600', color: '#475569', marginLeft: '10px' }}>Akurasi</span>
             </div>
           </div>
 
-          {/* Card 3: Modul Diselesaikan */}
-          <div style={{ backgroundColor: '#FFFFFF', padding: '32px', borderRadius: '24px', border: '1px solid #E2E8F0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.02)', display: 'flex', flexDirection: 'column' }}>
+          <div style={{ backgroundColor: '#FFFFFF', padding: '24px', borderRadius: '20px', border: '1px solid #E2E8F0', boxShadow: '0 2px 4px -1px rgba(0,0,0,0.02)', display: 'flex', flexDirection: 'column', boxSizing: 'border-box' }}>
             <div style={{ display: 'flex', alignItems: 'center' }}>
-               <div style={{ width: '52px', height: '52px', backgroundColor: '#0F172A', borderRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFFFFF' }}>
+               <div style={{ width: '44px', height: '44px', backgroundColor: '#0F172A', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFFFFF' }}>
                   <IconChartLineWhite />
                </div>
-               <span style={{ fontSize: '18px', fontWeight: '700', color: '#0F172A', marginLeft: '16px' }}>Modul Selesai</span>
+               <span style={{ fontSize: '16px', fontWeight: '700', color: '#0F172A', marginLeft: '14px' }}>Modul Selesai</span>
             </div>
 
-            <div style={{ marginTop: '36px', display: 'flex', alignItems: 'baseline' }}>
-               <span style={{ fontSize: '48px', fontWeight: '800', color: '#0F172A', lineHeight: '1', letterSpacing: '-1px' }}>
+            <div style={{ marginTop: '24px', display: 'flex', alignItems: 'baseline' }}>
+               <span style={{ fontSize: '36px', fontWeight: '800', color: '#0F172A', lineHeight: '1', letterSpacing: '-1px' }}>
                  {dashboardData.completed_modules}
                </span>
-               <span style={{ fontSize: '18px', fontWeight: '600', color: '#475569', marginLeft: '12px' }}>Modul</span>
+               <span style={{ fontSize: '15px', fontWeight: '600', color: '#475569', marginLeft: '10px' }}>Modul</span>
             </div>
           </div>
 
         </div>
 
-        {/* SECTION 3: GRAFIK AKTIVITAS MINGGUAN */}
-        <div style={{ backgroundColor: '#FFFFFF', padding: isMobile ? '24px 16px' : '40px', borderRadius: '24px', border: '1px solid #E2E8F0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.02)', width: '100%' }}>
-          <div style={{ marginBottom: '40px' }}>
-            <h3 style={{ margin: '0 0 8px 0', fontSize: '20px', fontWeight: '800', color: '#0F172A' }}>Grafik Aktivitas Mingguan</h3>
+        {/** Activity Analytics Chart Container */}
+        <div style={{ backgroundColor: '#FFFFFF', padding: isMobile ? '24px 16px' : '32px 40px', borderRadius: '20px', border: '1px solid #E2E8F0', boxShadow: '0 2px 4px -1px rgba(0,0,0,0.02)', width: '100%', boxSizing: 'border-box' }}>
+          <div style={{ marginBottom: '32px' }}>
+            <h3 style={{ margin: '0 0 8px 0', fontSize: '18px', fontWeight: '800', color: '#0F172A' }}>Grafik Aktivitas Mingguan</h3>
             <p style={{ margin: 0, fontSize: '14px', color: '#475569', fontWeight: '500' }}>Arahkan kursor ke grafik batang untuk melihat siapa saja murid yang aktif belajar.</p>
           </div>
           
-          <div style={{ width: '100%', height: '320px' }}>
+          <div style={{ width: '100%', height: '320px', minWidth: 0 }}>
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={dashboardData.weekly_activity} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
+              <BarChart data={dashboardData.weekly_activity} margin={{ top: 10, right: 10, left: 0, bottom: 10 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F1F5F9" />
                 <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fontSize: 13, fill: '#94A3B8', fontWeight: 600 }} dy={15} />
-                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 13, fill: '#94A3B8', fontWeight: 600 }} dx={-15} domain={[0, 100]} />
+                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 13, fill: '#94A3B8', fontWeight: 600 }} dx={-10} domain={[0, 100]} />
                 <Tooltip cursor={{ fill: '#F1F5F9', opacity: 0.6 }} content={<CustomTooltip />} />
                 <Bar dataKey="skor" fill="#0F172A" radius={[6, 6, 0, 0]} barSize={isMobile ? 24 : 40} />
               </BarChart>
@@ -220,61 +220,61 @@ export default function ProgressPage() {
           </div>
         </div>
 
-        {/* SECTION 4: LOG AKTIVITAS BAWAH (Disempurnakan ke Enterprise UI) */}
+        {/** Activity History Logs Area */}
         <div style={{ display: 'grid', gridTemplateColumns: gridLogs, gap: '24px' }}>
           
-          <div style={{ backgroundColor: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: '24px', padding: isMobile ? '24px' : '32px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.02)' }}>
-            <div style={{ marginBottom: '32px' }}>
-              <h3 style={{ margin: 0, fontSize: '18px', fontWeight: '800', color: '#0F172A' }}>Log Penyelesaian Modul</h3>
+          <div style={{ backgroundColor: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: '20px', padding: isMobile ? '24px' : '32px', boxShadow: '0 2px 4px -1px rgba(0,0,0,0.02)', boxSizing: 'border-box' }}>
+            <div style={{ marginBottom: '24px' }}>
+              <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '800', color: '#0F172A' }}>Log Penyelesaian Modul</h3>
             </div>
             
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               {dashboardData.learning_logs.length > 0 ? (
                 dashboardData.learning_logs.map((log) => (
-                  <div key={log.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '20px', borderBottom: '1px solid #F1F5F9' }}>
+                  <div key={log.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '16px', borderBottom: '1px solid #F1F5F9' }}>
                     <div>
-                      <h4 style={{ margin: '0 0 6px 0', fontSize: '15px', fontWeight: '800', color: '#0F172A' }}>{log.module}</h4>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <span style={{ fontSize: '12px', color: '#0F172A', fontWeight: '700', backgroundColor: '#F1F5F9', padding: '4px 10px', borderRadius: '6px' }}>{log.studentName}</span>
-                        <span style={{ fontSize: '12px', color: '#94A3B8', fontWeight: '600' }}>{log.date}</span>
+                      <h4 style={{ margin: '0 0 6px 0', fontSize: '14px', fontWeight: '800', color: '#0F172A' }}>{log.module}</h4>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <IconCheckGreen />
+                        <span style={{ fontSize: '13px', color: '#94A3B8', fontWeight: '600' }}>{log.date}</span>
                       </div>
                     </div>
                     <div style={{ textAlign: 'right' }}>
-                      <span style={{ fontSize: '18px', fontWeight: '800', color: log.score >= 90 ? '#10B981' : '#0F172A' }}>{log.score}%</span>
-                      <p style={{ margin: '2px 0 0 0', fontSize: '12px', color: '#64748B', fontWeight: '600' }}>Akurasi AI</p>
+                      <span style={{ fontSize: '16px', fontWeight: '800', color: log.score >= 90 ? '#10B981' : '#0F172A' }}>{log.score}%</span>
+                      <p style={{ margin: '2px 0 0 0', fontSize: '11px', color: '#64748B', fontWeight: '600' }}>Akurasi AI</p>
                     </div>
                   </div>
                 ))
               ) : (
-                <p style={{ fontSize: '14px', color: '#94A3B8', textAlign: 'center', padding: '40px 0', fontWeight: '600' }}>Belum ada modul yang diselesaikan murid.</p>
+                <p style={{ fontSize: '14px', color: '#94A3B8', textAlign: 'center', padding: '40px 0', fontWeight: '600', margin: 0 }}>Belum ada modul yang diselesaikan murid.</p>
               )}
             </div>
           </div>
 
-          <div style={{ backgroundColor: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: '24px', padding: isMobile ? '24px' : '32px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.02)' }}>
-            <div style={{ marginBottom: '32px' }}>
-              <h3 style={{ margin: 0, fontSize: '18px', fontWeight: '800', color: '#0F172A' }}>Riwayat Pencapaian Quest</h3>
+          <div style={{ backgroundColor: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: '20px', padding: isMobile ? '24px' : '32px', boxShadow: '0 2px 4px -1px rgba(0,0,0,0.02)', boxSizing: 'border-box' }}>
+            <div style={{ marginBottom: '24px' }}>
+              <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '800', color: '#0F172A' }}>Riwayat Pencapaian Quest</h3>
             </div>
             
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               {dashboardData.quest_logs.length > 0 ? (
                 dashboardData.quest_logs.map((log) => (
-                  <div key={log.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '20px', borderBottom: '1px solid #F1F5F9' }}>
-                    <div>
-                      <h4 style={{ margin: '0 0 6px 0', fontSize: '15px', fontWeight: '800', color: '#0F172A' }}>{log.quest}</h4>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <span style={{ fontSize: '12px', color: '#D97706', fontWeight: '700', backgroundColor: '#FFFBEB', padding: '4px 10px', borderRadius: '6px' }}>{log.studentName}</span>
-                        <span style={{ fontSize: '12px', color: '#94A3B8', fontWeight: '600' }}>{log.date}</span>
+                  <div key={log.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '16px', borderBottom: '1px solid #F1F5F9' }}>
+                    <div style={{ paddingRight: '12px' }}>
+                      <h4 style={{ margin: '0 0 6px 0', fontSize: '14px', fontWeight: '800', color: '#0F172A', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{log.quest}</h4>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <IconCheckGreen />
+                        <span style={{ fontSize: '13px', color: '#94A3B8', fontWeight: '600' }}>Berhasil Diselesaikan</span>
                       </div>
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', backgroundColor: '#FEF3C7', padding: '8px 14px', borderRadius: '10px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', backgroundColor: '#FEF3C7', padding: '6px 12px', borderRadius: '8px', flexShrink: 0 }}>
                       <IconStarOrange />
-                      <span style={{ fontSize: '15px', fontWeight: '800', color: '#B45309' }}>+{log.reward}</span>
+                      <span style={{ fontSize: '14px', fontWeight: '800', color: '#B45309' }}>+{log.reward}</span>
                     </div>
                   </div>
                 ))
               ) : (
-                <p style={{ fontSize: '14px', color: '#94A3B8', textAlign: 'center', padding: '40px 0', fontWeight: '600' }}>Belum ada quest yang diselesaikan.</p>
+                <p style={{ fontSize: '14px', color: '#94A3B8', textAlign: 'center', padding: '40px 0', fontWeight: '600', margin: 0 }}>Belum ada quest yang diselesaikan.</p>
               )}
             </div>
           </div>
@@ -282,7 +282,7 @@ export default function ProgressPage() {
         </div>
       </div>
 
-      {/* --- MODAL RINCIAN BINTANG (UPGRADED UI) --- */}
+      {/** Modal Daily Star Receivers Overview */}
       {isStarModalOpen && (
         <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(15, 23, 42, 0.4)', backdropFilter: 'blur(4px)', zIndex: 100, display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '16px', animation: 'fadeIn 0.2s ease-out' }}>
           <div style={{ backgroundColor: '#FFFFFF', width: '100%', maxWidth: '480px', borderRadius: '24px', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)', overflow: 'hidden', animation: 'scaleUp 0.2s ease-out' }}>

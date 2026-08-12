@@ -27,22 +27,22 @@ export default function StudentManagementPage() {
   const isMobile = windowWidth < 768;
   const paddingMain = isDesktop ? '40px 64px' : '24px 16px';
 
-  // State Management
+  /** State Management Initialization */
   const [students, setStudents] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [activeMenuId, setActiveMenuId] = useState(null);
 
-  // Bulk Selection States
+  /** Bulk Selection States */
   const [isBulkMode, setIsBulkMode] = useState(false);
   const [selectedUserIds, setSelectedUserIds] = useState([]);
 
-  // Form States
+  /** Form Control States */
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({ name: '', email: '', password: '' });
   const [editingStudent, setEditingStudent] = useState(null);
 
-  // Custom Alert / Confirm Modal State
+  /** Custom Alert and Confirm Modal State */
   const [dialogConfig, setDialogConfig] = useState({
     isOpen: false,
     title: '',
@@ -51,7 +51,7 @@ export default function StudentManagementPage() {
     onConfirm: null
   });
 
-  // Pagination States
+  /** Pagination Display States */
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
 
@@ -80,7 +80,7 @@ export default function StudentManagementPage() {
         setStudents(resData.data.students || []);
       }
     } catch (err) {
-      console.error("Failed to fetch students data:", err);
+      console.error("Failed to fetch students data", err);
     } finally {
       setIsLoading(false);
     }
@@ -97,7 +97,7 @@ export default function StudentManagementPage() {
     setDialogConfig({
       isOpen: true,
       title: 'Hapus Akses Murid',
-      message: 'Apakah Anda yakin ingin menghapus hak akses akun murid ini? Tindakan ini tidak dapat dibatalkan.',
+      message: 'Apakah Anda yakin ingin menghapus hak akses akun murid ini Tindakan ini tidak dapat dibatalkan.',
       type: 'confirm',
       onConfirm: async () => {
         setDialogConfig({ ...dialogConfig, isOpen: false });
@@ -122,7 +122,7 @@ export default function StudentManagementPage() {
     setDialogConfig({
       isOpen: true,
       title: 'Hapus Akses Murid',
-      message: `Apakah Anda yakin ingin menghapus hak akses ${selectedUserIds.length} akun murid terpilih? Tindakan ini tidak dapat dibatalkan.`,
+      message: `Apakah Anda yakin ingin menghapus hak akses ${selectedUserIds.length} akun murid terpilih Tindakan ini tidak dapat dibatalkan.`,
       type: 'confirm',
       onConfirm: async () => {
         setDialogConfig({ ...dialogConfig, isOpen: false });
@@ -273,7 +273,7 @@ export default function StudentManagementPage() {
                     </th>
                   )}
                   <th style={{ padding: '16px 24px', fontSize: '13px', fontWeight: '700', color: '#0F172A', borderBottom: '1px solid #E2E8F0' }}>Profil murid</th>
-                  <th style={{ padding: '16px 24px', fontSize: '13px', fontWeight: '700', color: '#0F172A', borderBottom: '1px solid #E2E8F0' }}>Institusi / Kelas</th>
+                  <th style={{ padding: '16px 24px', fontSize: '13px', fontWeight: '700', color: '#0F172A', borderBottom: '1px solid #E2E8F0' }}>Institusi Kelas</th>
                   <th style={{ padding: '16px 24px', fontSize: '13px', fontWeight: '700', color: '#0F172A', borderBottom: '1px solid #E2E8F0' }}>Status Akses</th>
                   <th style={{ padding: '16px 24px', fontSize: '13px', fontWeight: '700', color: '#0F172A', borderBottom: '1px solid #E2E8F0', textAlign: 'right' }}>Aksi</th>
                 </tr>
@@ -298,7 +298,7 @@ export default function StudentManagementPage() {
                         </div>
                         <div>
                           <div style={{ fontSize: '15px', fontWeight: '800', color: '#0F172A', marginBottom: '2px' }}>{student.name}</div>
-                          <div style={{ fontSize: '12px', color: '#94A3B8', fontWeight: '400' }}>ID Sistem: #{student.id.toString().padStart(4, '0')}</div>
+                          <div style={{ fontSize: '12px', color: '#94A3B8', fontWeight: '400' }}>ID Sistem #{student.id.toString().padStart(4, '0')}</div>
                         </div>
                       </div>
                     </td>
@@ -390,13 +390,13 @@ export default function StudentManagementPage() {
                   <label style={{ fontSize: '11px', fontWeight: '800', color: '#475569', display: 'block', marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>EMAIL KREDENSIAL</label>
                   <div style={{ position: 'relative' }}>
                     <div style={{ position: 'absolute', left: '16px', top: '16px', zIndex: 2 }}><IconMail /></div>
-                    <input type="email" required={!editingStudent} placeholder="contoh@email.com" value={formData.email || ''} onChange={(e) => setFormData({...formData, email: e.target.value})} style={inputStyle} onFocus={inputFocus} onBlur={inputBlur} />
+                    <input type="email" required={!editingStudent} placeholder="contoh akun email" value={formData.email || ''} onChange={(e) => setFormData({...formData, email: e.target.value})} style={inputStyle} onFocus={inputFocus} onBlur={inputBlur} />
                   </div>
                 </div>
 
                 <div>
                   <label style={{ fontSize: '11px', fontWeight: '800', color: '#475569', display: 'block', marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                    {editingStudent ? 'KATA SANDI BARU (OPSIONAL)' : 'KATA SANDI AKSES'}
+                    {editingStudent ? 'KATA SANDI BARU OPSIONAL' : 'KATA SANDI AKSES'}
                   </label>
                   <div style={{ position: 'relative' }}>
                     <div style={{ position: 'absolute', left: '16px', top: '16px', zIndex: 2 }}><IconLock /></div>
@@ -408,7 +408,7 @@ export default function StudentManagementPage() {
               <div style={{ marginTop: '32px', display: 'flex', justifyContent: 'flex-end', gap: '12px', paddingTop: '24px', borderTop: '1px solid #F1F5F9' }}>
                 <button type="button" onClick={() => setIsModalOpen(false)} style={{ padding: '14px 20px', background: '#FFFFFF', border: '1px solid #CBD5E1', borderRadius: '12px', fontSize: '14px', fontWeight: '700', color: '#475569', cursor: 'pointer' }}>Batal</button>
                 <button type="submit" disabled={isSubmitting} style={{ padding: '14px 24px', backgroundColor: '#0F172A', color: 'white', border: 'none', borderRadius: '12px', fontSize: '14px', fontWeight: '700', cursor: isSubmitting ? 'wait' : 'pointer' }}>
-                  {isSubmitting ? 'Menyimpan...' : (editingStudent ? 'Perbarui Akses' : 'Simpan Akses')}
+                  {isSubmitting ? 'Menyimpan' : (editingStudent ? 'Perbarui Akses' : 'Simpan Akses')}
                 </button>
               </div>
             </form>
@@ -444,7 +444,7 @@ export default function StudentManagementPage() {
                 onClick={dialogConfig.type === 'confirm' ? dialogConfig.onConfirm : () => setDialogConfig({ ...dialogConfig, isOpen: false })} 
                 style={{ flex: 1, padding: '14px', backgroundColor: dialogConfig.type === 'confirm' ? '#EF4444' : '#0F172A', color: 'white', border: 'none', borderRadius: '14px', fontSize: '14px', fontWeight: '700', cursor: 'pointer', transition: 'all 0.2s', boxShadow: dialogConfig.type === 'confirm' ? '0 4px 6px rgba(239, 68, 68, 0.2)' : '0 4px 6px rgba(15, 23, 42, 0.2)' }}
               >
-                {dialogConfig.type === 'confirm' ? 'Ya, Hapus' : 'Oke, Mengerti'}
+                {dialogConfig.type === 'confirm' ? 'Ya Hapus' : 'Oke Mengerti'}
               </button>
             </div>
 

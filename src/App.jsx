@@ -3,7 +3,8 @@ import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'r
 
 /* Impor Komponen Dasbor Pribadi */
 import Sidebar from './components/Sidebar';
-import Dashboard from './components/Dashboard'; /* <-- IMPOR KOMPONEN DASHBOARD BARU (Sesuaikan path foldernya jika diletakkan di /pages) */
+import TopNavbar from './components/TopNavbar'; /* <--- IMPOR NAVBAR BARU KITA */
+import Dashboard from './components/Dashboard'; 
 import InteractiveModule from './pages/InteractiveModule';
 import QuestPage from './pages/QuestPage';
 import EducatorPage from './pages/EducatorPage';
@@ -101,9 +102,19 @@ const DashboardLayout = () => {
         userRole={user?.role} 
       />
 
+      {/* AREA KONTEN UTAMA */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflowY: 'auto', overflowX: 'hidden', position: 'relative' }}>
         
-        {/* LOGIKA PEMANGGILAN KOMPONEN DASHBOARD & INTERACTIVE MODULE */}
+        {/* --- PEMANGGILAN TOP NAVBAR CERDAS (Hanya dipanggil 1 kali untuk semua menu) --- */}
+        <TopNavbar 
+          activeMenu={activeMenu} 
+          setActiveMenu={setActiveMenu}
+          selectedLevel={selectedLevel} 
+          user={user} 
+          isMobile={isMobile} 
+        />
+
+        {/* LOGIKA PEMANGGILAN KOMPONEN HALAMAN */}
         {activeMenu === 'modules' && !selectedLevel && (
           <Dashboard 
             setSelectedLevel={setSelectedLevel} 

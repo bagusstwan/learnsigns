@@ -1,63 +1,71 @@
 import { useState } from 'react';
 import PropTypes from 'prop-types';
-import ModalAlert from './ModalAlert'; 
 
-/* IKON MENU UTAMA */
+/** Main Navigation Icons */
 const IconHome = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>;
 const IconTrendingUp = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>;
-const IconTrophy = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path><path d="M4 22h16"></path><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"></path><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"></path><path d="M18 2H6v7a6 6 0 0 0 12 0V2z"></path></svg>;
+const IconTrophy = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path><path d="M4 22h16"></path><path d="M10 14.66V17c0 .55.47.98.97 1.21C7.85 18.75 7 20.24 7 22"></path><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"></path><path d="M18 2H6v7a6 6 0 0 0 12 0V2z"></path></svg>;
 const IconUsers = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>;
 const IconUserManage = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>;
 const IconClose = () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>;
-const IconSettings = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>;
+const IconLeaderboard = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20V10"></path><path d="M18 20V4"></path><path d="M6 20v-4"></path></svg>;
 
-/* IKON FLOATING TOGGLE */
+/** Floating Toggle Icons */
 const IconChevronLeft = () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>;
 const IconChevronRight = () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>;
 
-/* IKON AKSI BAWAH (POPUP) */
-const IconLeaderboard = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20V10"></path><path d="M18 20V4"></path><path d="M6 20v-4"></path></svg>;
-const IconProfile = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>;
-const IconLogout = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>;
-
 export default function Sidebar({ activeMenu, setActiveMenu, selectedLevel, setSelectedLevel, isMobile, isOpen, setIsOpen, userRole }) {
   
-  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(true);
   const [showModulePopup, setShowModulePopup] = useState(false);
-  const [showBottomPopup, setShowBottomPopup] = useState(false);
   
   const showAsMinimized = !isMobile && isMinimized;
 
+  /**
+   * Handles navigation routing and sidebar states upon general menu interaction
+   */
   const handleMenuClick = (menuType) => {
-    if (menuType !== 'settingsPopup') {
-       setActiveMenu(menuType);
-    }
+    setActiveMenu(menuType);
     if (menuType !== 'modules') setSelectedLevel(null); 
     if (isMobile) setIsOpen(false); 
     setShowModulePopup(false);
-    setShowBottomPopup(false);
   };
 
+  /**
+   * Special handler for the modules tab to ensure navigation triggers alongside the popup toggle
+   */
+  const handleModuleClick = () => {
+    setActiveMenu('modules');
+    setSelectedLevel(null);
+    if (isMobile) setIsOpen(false);
+
+    if (showAsMinimized) {
+      setShowModulePopup(prev => !prev);
+    } else {
+      setShowModulePopup(false);
+    }
+  };
+
+  /**
+   * Handles specific sub level selection within the interactive module
+   */
   const handleSubMenuClick = (level) => {
-    handleMenuClick('modules');
+    setActiveMenu('modules');
     setSelectedLevel(level);
     setShowModulePopup(false);
     if (isMobile) setIsOpen(false); 
   };
 
-  const executeLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    window.location.href = '/login';
-  };
-
+  /**
+   * Closes all active popups to reset the visual state
+   */
   const closeAllPopups = () => {
     setShowModulePopup(false);
-    setShowBottomPopup(false);
   };
 
-  /* STYLING UNTUK MENU ITEM */
+  /**
+   * Dynamically generates the style object for menu items based on their active state
+   */
   const getMenuItemStyle = (isActive) => ({
     display: 'flex', 
     alignItems: 'center', 
@@ -75,6 +83,30 @@ export default function Sidebar({ activeMenu, setActiveMenu, selectedLevel, setS
     transition: 'all 0.3s ease', 
     margin: '0 auto',
     position: 'relative' 
+  });
+
+  /**
+   * Dynamically generates the premium style object specifically for the highlighted Leaderboard button
+   */
+  const getLeaderboardStyle = (isActive) => ({
+    display: 'flex', 
+    alignItems: 'center', 
+    justifyContent: 'flex-start',
+    gap: '16px', 
+    padding: showAsMinimized ? '0 12px' : '10px 16px',
+    width: showAsMinimized ? '44px' : '100%',
+    height: '44px',
+    boxSizing: 'border-box', 
+    borderRadius: showAsMinimized ? '22px' : '12px', 
+    color: isActive ? '#FFFFFF' : '#4F46E5', 
+    backgroundColor: isActive ? '#4F46E5' : '#EEF2FF', 
+    border: isActive ? 'none' : '1px solid #C7D2FE',
+    cursor: 'pointer', 
+    fontWeight: isActive ? '800' : '700', 
+    transition: 'all 0.3s ease', 
+    margin: '0 auto',
+    position: 'relative',
+    boxShadow: isActive ? '0 4px 10px rgba(79, 70, 229, 0.3)' : '0 1px 2px rgba(0,0,0,0.02)'
   });
 
   return (
@@ -100,7 +132,7 @@ export default function Sidebar({ activeMenu, setActiveMenu, selectedLevel, setS
         <div onClick={() => setIsOpen(false)} style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(17, 24, 39, 0.4)', zIndex: 45, backdropFilter: 'blur(2px)' }}></div>
       )}
 
-      {(showModulePopup || showBottomPopup) && (
+      {showModulePopup && (
         <div onClick={closeAllPopups} style={{ position: 'fixed', inset: 0, zIndex: 55 }}></div>
       )}
 
@@ -137,14 +169,13 @@ export default function Sidebar({ activeMenu, setActiveMenu, selectedLevel, setS
           </button>
         )}
 
-        <div style={{ flex: 1, padding: '32px 0', display: 'flex', flexDirection: 'column', overflowY: 'auto', overflowX: 'visible' }}>
+        <div style={{ flex: 1, padding: '32px 0', display: 'flex', flexDirection: 'column' }}>
           
-          {/* Header */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: showAsMinimized ? 'center' : 'space-between', marginBottom: '48px', padding: showAsMinimized ? '0' : '0 24px', height: '40px', overflow: 'hidden', whiteSpace: 'nowrap' }}>
-              <h1 style={{ margin: 0, fontSize: '29px', fontWeight: '900', fontStyle: 'bold', color: '#0F172A', letterSpacing: '-1px', display: 'flex', alignItems: 'center' }}>
+              <h1 style={{ margin: 0, fontSize: '29px', fontWeight: '900', fontStyle: 'italic', color: '#0F172A', letterSpacing: '-1px', display: 'flex', alignItems: 'center' }}>
                 V
                 <span style={{ 
-                  fontSize: '29px', fontStyle: 'bold', fontWeight: '800',  
+                  fontSize: '29px', fontStyle: 'italic', fontWeight: '800',  
                   opacity: showAsMinimized ? 0 : 1, width: showAsMinimized ? '0px' : '70px', 
                   transition: 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)', display: 'inline-block', overflow: 'hidden'
                 }}>iba.ai</span>
@@ -158,14 +189,7 @@ export default function Sidebar({ activeMenu, setActiveMenu, selectedLevel, setS
             
             <div className="menu-wrapper" style={{ position: 'relative', width: '100%', display: 'flex', justifyContent: 'center' }}>
               <div 
-                onClick={() => {
-                   if (showAsMinimized) {
-                     setShowModulePopup(!showModulePopup);
-                     setShowBottomPopup(false);
-                   } else {
-                     handleMenuClick('modules');
-                   }
-                }} 
+                onClick={handleModuleClick} 
                 style={getMenuItemStyle(activeMenu === 'modules' && !selectedLevel)} 
                 onMouseOver={(e) => { if(activeMenu !== 'modules' || selectedLevel) e.currentTarget.style.color = '#0F172A'; }} 
                 onMouseOut={(e) => { if(activeMenu !== 'modules' || selectedLevel) e.currentTarget.style.color = '#64748B'; }}
@@ -202,9 +226,9 @@ export default function Sidebar({ activeMenu, setActiveMenu, selectedLevel, setS
                 onMouseOut={(e) => { if(activeMenu !== 'quests') e.currentTarget.style.color = '#64748B'; }}
               >
                 <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', width: '20px', height: '20px' }}><IconTrophy /></div> 
-                {!showAsMinimized && <span style={{ fontSize: '15px' }}>Tantangan (Quest)</span>}
+                {!showAsMinimized && <span style={{ fontSize: '15px' }}>Tantangan Quest</span>}
               </div>
-              {showAsMinimized && <div className="custom-tooltip">Tantangan (Quest)</div>}
+              {showAsMinimized && <div className="custom-tooltip">Tantangan Quest</div>}
             </div>
 
             {userRole !== 'student' && (
@@ -245,85 +269,38 @@ export default function Sidebar({ activeMenu, setActiveMenu, selectedLevel, setS
                 onMouseOut={(e) => { if(activeMenu !== 'progress') e.currentTarget.style.color = '#64748B'; }}
               >
                 <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', width: '20px', height: '20px' }}><IconTrendingUp /></div> 
-                {!showAsMinimized && <span style={{ fontSize: '15px' }}>Monitoring Perkembangan</span>}
+                {!showAsMinimized && <span style={{ fontSize: '15px' }}>Monitoring Siswa</span>}
               </div>
-              {showAsMinimized && <div className="custom-tooltip">Monitoring Perkembangan</div>}
+              {showAsMinimized && <div className="custom-tooltip">Monitoring Siswa</div>}
             </div>
 
           </nav>
         </div>
 
         <div className="menu-wrapper" style={{ padding: showAsMinimized ? '24px 0' : '24px 20px', display: 'flex', justifyContent: 'center', width: '100%', boxSizing: 'border-box', position: 'relative' }}>
-          
           <div 
-            onClick={() => {
-                setShowBottomPopup(!showBottomPopup);
-                setShowModulePopup(false);
+            onClick={() => handleMenuClick('leaderboard')} 
+            style={getLeaderboardStyle(activeMenu === 'leaderboard')} 
+            onMouseOver={(e) => { 
+              if(activeMenu !== 'leaderboard') { 
+                e.currentTarget.style.backgroundColor = '#E0E7FF'; 
+                e.currentTarget.style.transform = 'translateY(-1px)'; 
+              } 
             }} 
-            style={getMenuItemStyle(showBottomPopup)} 
-            onMouseOver={(e) => { if(!showBottomPopup) e.currentTarget.style.color = '#0F172A'; }} 
-            onMouseOut={(e) => { if(!showBottomPopup) e.currentTarget.style.color = '#64748B'; }}
+            onMouseOut={(e) => { 
+              if(activeMenu !== 'leaderboard') { 
+                e.currentTarget.style.backgroundColor = '#EEF2FF'; 
+                e.currentTarget.style.transform = 'translateY(0)'; 
+              } 
+            }}
           >
-            <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', width: '20px', height: '20px' }}><IconSettings /></div> 
-            {!showAsMinimized && <span style={{ fontSize: '15px' }}>Pengaturan & Akun</span>}
+            <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', width: '20px', height: '20px' }}><IconLeaderboard /></div> 
+            {!showAsMinimized && <span style={{ fontSize: '15px' }}>Peringkat Global</span>}
           </div>
-
-          {showAsMinimized && !showBottomPopup && <div className="custom-tooltip">Pengaturan & Akun</div>}
-
-          {showBottomPopup && (
-            <div style={{ 
-                position: 'absolute', 
-                left: showAsMinimized ? '100%' : '20px', 
-                bottom: showAsMinimized ? '24px' : '75px', 
-                marginLeft: showAsMinimized ? '20px' : '0', 
-                backgroundColor: '#FFFFFF', 
-                border: '1px solid #E2E8F0', 
-                borderRadius: '16px', 
-                boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1)', 
-                padding: '16px', 
-                zIndex: 70, 
-                width: '240px',
-                display: 'flex', 
-                flexDirection: 'column', 
-                gap: '4px' 
-            }}>
-              <div style={{ padding: '0 8px', fontSize: '11px', fontWeight: '800', color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px' }}>Aksi Lanjutan</div>
-              
-              <div style={{ borderTop: '1px solid #F1F5F9', marginBottom: '8px', margin: '0 8px' }}></div>
-              
-              <div onClick={() => { handleMenuClick('leaderboard'); setShowBottomPopup(false); }} style={{ display: 'flex', alignItems: 'center', gap: '14px', padding: '12px 12px', borderRadius: '10px', cursor: 'pointer', fontSize: '14px', fontWeight: '600', color: activeMenu === 'leaderboard' ? '#0F172A' : '#475569', backgroundColor: activeMenu === 'leaderboard' ? '#F8FAFC' : 'transparent', transition: '0.2s' }} onMouseOver={e => e.currentTarget.style.backgroundColor = '#F1F5F9'} onMouseOut={e => e.currentTarget.style.backgroundColor = activeMenu === 'leaderboard' ? '#F8FAFC' : 'transparent'}>
-                <IconLeaderboard /> Peringkat Global
-              </div>
-              
-              <div onClick={() => { handleMenuClick('profile'); setShowBottomPopup(false); }} style={{ display: 'flex', alignItems: 'center', gap: '14px', padding: '12px 12px', borderRadius: '10px', cursor: 'pointer', fontSize: '14px', fontWeight: '600', color: activeMenu === 'profile' ? '#0F172A' : '#475569', backgroundColor: activeMenu === 'profile' ? '#F8FAFC' : 'transparent', transition: '0.2s' }} onMouseOver={e => e.currentTarget.style.backgroundColor = '#F1F5F9'} onMouseOut={e => e.currentTarget.style.backgroundColor = activeMenu === 'profile' ? '#F8FAFC' : 'transparent'}>
-                <IconProfile /> Profil Akun
-              </div>
-              
-              <div onClick={() => { handleMenuClick('settings'); setShowBottomPopup(false); }} style={{ display: 'flex', alignItems: 'center', gap: '14px', padding: '12px 12px', borderRadius: '10px', cursor: 'pointer', fontSize: '14px', fontWeight: '600', color: activeMenu === 'settings' ? '#0F172A' : '#475569', backgroundColor: activeMenu === 'settings' ? '#F8FAFC' : 'transparent', transition: '0.2s' }} onMouseOver={e => e.currentTarget.style.backgroundColor = '#F1F5F9'} onMouseOut={e => e.currentTarget.style.backgroundColor = activeMenu === 'settings' ? '#F8FAFC' : 'transparent'}>
-                <IconSettings /> Pengaturan Sistem
-              </div>
-              
-              <div style={{ borderTop: '1px solid #F1F5F9', margin: '8px 8px' }}></div>
-              
-              <div onClick={() => { setShowBottomPopup(false); setIsLogoutModalOpen(true); }} style={{ display: 'flex', alignItems: 'center', gap: '14px', padding: '12px 12px', borderRadius: '10px', cursor: 'pointer', fontSize: '14px', fontWeight: '700', color: '#EF4444', transition: '0.2s' }} onMouseOver={e => {e.currentTarget.style.backgroundColor = '#FEF2F2';}} onMouseOut={e => {e.currentTarget.style.backgroundColor = 'transparent';}}>
-                <IconLogout /> Keluar Sesi
-              </div>
-            </div>
-          )}
+          {showAsMinimized && <div className="custom-tooltip">Peringkat Global</div>}
         </div>
 
       </aside>
-
-      <ModalAlert 
-        isOpen={isLogoutModalOpen}
-        onClose={() => setIsLogoutModalOpen(false)}
-        onConfirm={executeLogout}
-        title="Keluar Sistem Viba.ai"
-        message="Anda yakin ingin mengakhiri sesi saat ini? Anda perlu memasukkan kembali kredensial akses untuk masuk."
-        confirmText="Keluar Sistem"
-        cancelText="Batalkan"
-        type="danger"
-      />
     </>
   );
 }

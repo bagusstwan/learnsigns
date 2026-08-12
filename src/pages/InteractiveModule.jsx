@@ -17,8 +17,10 @@ const IconBack = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="non
 const IconClose = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>;
 const IconSearch = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>;
 const IconStar = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="#F59E0B" stroke="#F59E0B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>;
+const IconAlertTriangle = () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#EF4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>;
+const IconCheckCircle = () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#10B981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>;
 
-/* Daftar Label Klasifikasi Kecerdasan Buatan */
+/** Artificial Intelligence Classification Labels */
 const ALPHABET_LABELS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'];
 
 export default function InteractiveModule({ selectedLevel, setSelectedLevel }) {
@@ -34,7 +36,7 @@ export default function InteractiveModule({ selectedLevel, setSelectedLevel }) {
   const isTablet = windowWidth <= 1024 && windowWidth >= 768;
   const isMobileScreen = windowWidth < 768;
 
-  /* Deteksi Otoritas Peran Pendidik */
+  /** Educator Authorization Verification */
   const userStr = localStorage.getItem('user') || '';
   let isEducator = false;
   const isEducatorRef = useRef(false);
@@ -47,7 +49,7 @@ export default function InteractiveModule({ selectedLevel, setSelectedLevel }) {
   const token = localStorage.getItem('token');
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api/v1';
 
-  /* Manajemen State Utama Aplikasi */
+  /** Core Application State Management */
   const [modules, setModules] = useState([]); 
   const [currentModule, setCurrentModule] = useState(null);
   const [signStatus, setSignStatus] = useState("System Standby");
@@ -58,7 +60,7 @@ export default function InteractiveModule({ selectedLevel, setSelectedLevel }) {
   const [isTutorialModalOpen, setIsTutorialModalOpen] = useState(false);
   const [tfModel, setTfModel] = useState(null);
 
-  /* Manajemen State Khusus Evaluasi Kelas Pendidik */
+  /** Specific State Management for Live Class Evaluation */
   const [studentsData, setStudentsData] = useState([]);
   const [isLiveEvalOpen, setIsLiveEvalOpen] = useState(false);
   const [evalSearchQuery, setEvalSearchQuery] = useState("");
@@ -66,7 +68,10 @@ export default function InteractiveModule({ selectedLevel, setSelectedLevel }) {
   const [evalStars, setEvalStars] = useState(10);
   const [isSubmittingEval, setIsSubmittingEval] = useState(false);
 
-  /* Referensi Memori Logika Kecerdasan Buatan */
+  /** Custom Notification Modal State */
+  const [statusModal, setStatusModal] = useState({ isOpen: false, title: "", message: "", type: "info" });
+
+  /** Memory References for Neural Network Engine */
   const webcamRef = useRef(null);
   const canvasRef = useRef(null);
   const isAiLocked = useRef(false);
@@ -76,7 +81,12 @@ export default function InteractiveModule({ selectedLevel, setSelectedLevel }) {
   
   const successFrameCount = useRef(0);
 
-  /* Mengambil Data Modul dan Inisialisasi Model Neural Network */
+  /** Trigger Custom Alert Modal */
+  const showNotification = (title, message, type) => {
+    setStatusModal({ isOpen: true, title, message, type });
+  };
+
+  /** Module Data Retrieval and Model Initialization */
   useEffect(() => {
     if (selectedLevel) {
       setAiMessage(`Menyiapkan mesin kecerdasan buatan untuk modul ${selectedLevel}...`);
@@ -100,7 +110,7 @@ export default function InteractiveModule({ selectedLevel, setSelectedLevel }) {
           }
         })
         .catch(err => {
-          console.error("Kesalahan Sistem:", err);
+          console.error("System Error", err);
           setAiMessage("Gagal terhubung ke basis data utama.");
         });
 
@@ -118,7 +128,7 @@ export default function InteractiveModule({ selectedLevel, setSelectedLevel }) {
           setTfModel(loadedModel);
           setAiMessage(`Mesin AI ${folderModel} aktif. Silakan mulai peragakan gestur.`);
         } catch (error) {
-          console.error("Gagal memuat model:", error);
+          console.error("Failed loading model", error);
           setAiMessage(`Kegagalan memuat parameter model untuk ${folderModel}.`);
         }
       };
@@ -138,7 +148,7 @@ export default function InteractiveModule({ selectedLevel, setSelectedLevel }) {
           setStudentsData(data.data.students || []);
         }
       })
-      .catch(err => console.error("Gagal memuat daftar murid:", err));
+      .catch(err => console.error("Failed fetching student list", err));
     }
   }, [isEducator, token, API_BASE_URL]);
 
@@ -155,10 +165,10 @@ export default function InteractiveModule({ selectedLevel, setSelectedLevel }) {
     }
   }, [currentModule]);
 
-  /* --- MESIN UTAMA PEMROSESAN VISUAL --- */
+  /** Core Visual Processing Engine */
   useEffect(() => {
     if (!selectedLevel || !currentModule) return;
-    if (isTutorialModalOpen || isLiveEvalOpen) return;
+    if (isTutorialModalOpen || isLiveEvalOpen || statusModal.isOpen) return;
     
     const hands = new Hands({ locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}` });
     hands.setOptions({ maxNumHands: 2, modelComplexity: 1, minDetectionConfidence: 0.8, minTrackingConfidence: 0.85 });
@@ -178,7 +188,7 @@ export default function InteractiveModule({ selectedLevel, setSelectedLevel }) {
 
       let baseStatus = "No Detection";
       let displayPercentage = 0;
-      let detectedLabel = "-";
+      let detectedLabel = "Blank";
       
       if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
         let flattened = [];
@@ -212,7 +222,7 @@ export default function InteractiveModule({ selectedLevel, setSelectedLevel }) {
                }
              });
            } catch (e) { 
-             console.error("Tensor Error:", e); 
+             console.error("Tensor Error", e); 
            }
            
            const isCorrect = (currentModule && detectedLabel === currentModule.target_gesture);
@@ -229,8 +239,7 @@ export default function InteractiveModule({ selectedLevel, setSelectedLevel }) {
                     executeSuccessAction(displayPercentage);
                  }
               } else {
-                 // Memberikan indikator kepada siswa bahwa mereka harus menahan posisi
-                 setSignStatus(`Tahan Posisi... ${successFrameCount.current}/15 (${displayPercentage}%)`);
+                 setSignStatus(`Tahan Posisi Belajar ${successFrameCount.current}/15 (${displayPercentage}%)`);
               }
            } else {
               successFrameCount.current = 0;
@@ -276,7 +285,7 @@ export default function InteractiveModule({ selectedLevel, setSelectedLevel }) {
     }
     return () => { if (cameraInstance) cameraInstance.stop(); hands.close(); };
     
-  }, [currentModule, selectedLevel, tfModel, isTutorialModalOpen, isLiveEvalOpen]); 
+  }, [currentModule, selectedLevel, tfModel, isTutorialModalOpen, isLiveEvalOpen, statusModal.isOpen]); 
 
   const executeSuccessAction = (confidence) => {
     setIsLoading(true);
@@ -296,7 +305,7 @@ export default function InteractiveModule({ selectedLevel, setSelectedLevel }) {
 
   const executeErrorAnalysis = async (detectedLabel, confidence) => {
     setIsLoading(true);
-    setAiMessage("Menganalisis perbaikan gerakan...");
+    setAiMessage("Menganalisis perbaikan gerakan");
     const reply = await getFeedbackFromAI(false, currentModule.target_gesture, confidence);
     
     setAiMessage(reply);
@@ -328,31 +337,64 @@ export default function InteractiveModule({ selectedLevel, setSelectedLevel }) {
     })
     .then(res => res.json())
     .then(() => { setIsLoading(false); executeNextModuleTransition(); })
-    .catch(err => { console.error('Kendala pencatatan log', err); setIsLoading(false); executeNextModuleTransition(); });
+    .catch(err => { console.error('Data logging issue', err); setIsLoading(false); executeNextModuleTransition(); });
   };
 
+  /** Handles Live Evaluation Data Submission */
   const handleLiveEvaluationSubmit = async (e) => {
     e.preventDefault();
     if (!evalSelectedStudent || evalStars < 1) {
-       alert("Harap lengkapi target murid dan jumlah bintang evaluasi.");
+       showNotification("Data Tidak Lengkap", "Harap lengkapi target murid dan jumlah bintang evaluasi sebelum menyimpan.", "warning");
        return;
     }
+    
     setIsSubmittingEval(true);
     try {
       const response = await fetch(`${API_BASE_URL}/educator/live-evaluate`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify({ student_id: evalSelectedStudent.id, module_id: currentModule.id, stars_earned: evalStars, accuracy: latestConfidenceRef.current })
+        headers: { 
+          'Content-Type': 'application/json',
+          'Accept': 'application/json', 
+          'Authorization': `Bearer ${token}` 
+        },
+        body: JSON.stringify({ 
+          student_id: evalSelectedStudent.id, 
+          module_id: currentModule.id, 
+          stars_earned: evalStars, 
+          accuracy: latestConfidenceRef.current 
+        })
       });
+
+      const responseText = await response.text(); 
+      let responseData;
+      
+      /** Safe JSON Parsing to prevent crash on 500 HTML response */
+      try {
+          responseData = JSON.parse(responseText);
+      } catch (parseError) {
+          console.error("Peladen merespons dengan HTML Format Tidak Valid", responseText);
+          showNotification("Kesalahan Peladen Server", "Peladen utama menolak permintaan. Silakan periksa Terminal Laravel Anda untuk melihat detail eror.", "error");
+          setIsSubmittingEval(false);
+          isAiLocked.current = false;
+          return;
+      }
+
       if (response.ok) {
-        setIsLiveEvalOpen(false); setEvalSelectedStudent(null); setEvalSearchQuery(""); setEvalStars(10); executeNextModuleTransition();
+        setIsLiveEvalOpen(false); 
+        setEvalSelectedStudent(null); 
+        setEvalSearchQuery(""); 
+        setEvalStars(10); 
+        showNotification("Evaluasi Berhasil", "Hasil praktikum murid berhasil direkam ke dalam sistem peladen.", "success");
+        executeNextModuleTransition();
       } else {
-        alert("Pencatatan kelas gagal dieksekusi.");
+        showNotification("Gagal Menyimpan", responseData.message || "Pencatatan kelas gagal dieksekusi oleh peladen.", "error");
       }
     } catch (error) {
-      alert("Masalah koneksi pada peladen evaluasi.");
+      console.error("Fetch Network Error", error);
+      showNotification("Koneksi Terputus", `Gagal menghubungi peladen Pesan Sistem ${error.message}`, "error");
     } finally {
-      setIsSubmittingEval(false); isAiLocked.current = false;
+      setIsSubmittingEval(false); 
+      isAiLocked.current = false;
     }
   };
 
@@ -371,7 +413,7 @@ export default function InteractiveModule({ selectedLevel, setSelectedLevel }) {
       
       <div style={{ padding: isDesktop ? '40px 48px' : isTablet ? '32px 32px' : '24px 16px', maxWidth: '1400px', margin: '0 auto', width: '100%', boxSizing: 'border-box', position: 'relative' }}>
         
-        {/* HEADER UI ENTERPRISE */}
+        {/** Enterprise UI Header */}
         <div style={{ display: 'flex', flexDirection: isMobileScreen ? 'column' : 'row', justifyContent: 'space-between', alignItems: isMobileScreen ? 'flex-start' : 'flex-end', gap: '20px', marginBottom: '32px' }}>
           <div>
             <span 
@@ -383,7 +425,7 @@ export default function InteractiveModule({ selectedLevel, setSelectedLevel }) {
               <IconBack /> Ruang Evaluasi Visual
             </span>
             <h1 style={{ margin: '0 0 8px 0', fontSize: isMobileScreen ? '28px' : '36px', fontWeight: '800', color: '#0F172A', letterSpacing: '-0.5px' }}>
-              Sesi Penilaian: Tingkat {selectedLevel === 'abjad' ? 'Abjad' : selectedLevel === 'kata' ? 'Kosa Kata' : 'Kalimat'}
+              Sesi Penilaian Tingkat {selectedLevel === 'abjad' ? 'Abjad' : selectedLevel === 'kata' ? 'Kosa Kata' : 'Kalimat'}
             </h1>
             <p style={{ margin: 0, fontSize: '15px', fontWeight: '400', color: '#475569', lineHeight: '1.6', maxWidth: '600px' }}>
               Pantau akurasi gestur secara langsung dan berikan konfirmasi akhir atas hasil evaluasi sistem kecerdasan buatan.
@@ -400,10 +442,10 @@ export default function InteractiveModule({ selectedLevel, setSelectedLevel }) {
           </button>
         </div>
         
-        {/* GRID 2 KOLOM */}
+        {/** Dual Column Layout */}
         <div style={{ display: 'grid', gridTemplateColumns: isDesktop ? '1.2fr 450px' : '1fr', gap: '32px', alignItems: 'flex-start', width: '100%', boxSizing: 'border-box' }}>
           
-          {/* KOLOM KIRI (KAMERA) */}
+          {/** Left Column Camera Feed */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', width: '100%', minWidth: 0, boxSizing: 'border-box' }}>
             
             <div style={{ position: 'relative', width: '100%', aspectRatio: '4/3', borderRadius: '24px', overflow: 'hidden', backgroundColor: '#000000', border: '1px solid #E2E8F0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
@@ -415,7 +457,7 @@ export default function InteractiveModule({ selectedLevel, setSelectedLevel }) {
               {signStatus.includes("Tahan") && (
                  <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: 15, backgroundColor: 'rgba(16, 185, 129, 0.8)', padding: '16px 24px', borderRadius: '16px', color: '#FFFFFF', fontSize: '20px', fontWeight: '800', textAlign: 'center', backdropFilter: 'blur(4px)', boxShadow: '0 10px 15px rgba(0,0,0,0.2)' }}>
                     TAHAN POSISI ANDA<br/>
-                    <span style={{ fontSize: '14px', fontWeight: '500' }}>{signStatus.split(" ")[2]}</span>
+                    <span style={{ fontSize: '14px', fontWeight: '500' }}>{signStatus.split(" ")[3]}</span>
                  </div>
               )}
 
@@ -430,14 +472,14 @@ export default function InteractiveModule({ selectedLevel, setSelectedLevel }) {
                 onMouseOver={(e) => { e.currentTarget.style.backgroundColor = '#1E293B'; }}
                 onMouseOut={(e) => { e.currentTarget.style.backgroundColor = '#0F172A'; }}
               >
-                <span style={{ fontSize: '16px', fontWeight: '700' }}>Konfirmasi & Simpan Penilaian</span>
+                <span style={{ fontSize: '16px', fontWeight: '700' }}>Konfirmasi Pengiriman Penilaian</span>
               </button>
             )}
             
             <GestureReferenceCard currentModule={currentModule} onOpenTutorial={() => setIsTutorialModalOpen(true)} />
           </div>
           
-          {/* KOLOM KANAN (ANALISIS AI) */}
+          {/** Right Column AI Analytics */}
           <div style={{ backgroundColor: '#FFFFFF', borderRadius: '24px', padding: '32px', border: '1px solid #E2E8F0', display: 'flex', flexDirection: 'column', minHeight: '560px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.02)' }}>
             
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '32px' }}>
@@ -458,7 +500,7 @@ export default function InteractiveModule({ selectedLevel, setSelectedLevel }) {
       <ModuleDrawer isOpen={isDrawerOpen} onClose={() => setIsDrawerOpen(false)} modules={modules} currentModule={currentModule} onSelectModule={(mod) => { setCurrentModule(mod); setIsDrawerOpen(false); }} isMobileScreen={isMobileScreen} />
       <TutorialModal isOpen={isTutorialModalOpen} onClose={() => setIsTutorialModalOpen(false)} module={currentModule} />
 
-      {/* POPUP EVALUASI */}
+      {/** Educator Evaluation Form Modal */}
       {isLiveEvalOpen && (
         <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(15, 23, 42, 0.6)', backdropFilter: 'blur(4px)', zIndex: 99999, display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '16px', animation: 'fadeIn 0.2s ease-out' }}>
           <div style={{ backgroundColor: '#FFFFFF', width: '100%', maxWidth: '480px', borderRadius: '24px', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)', overflow: 'hidden', animation: 'scaleUp 0.2s ease-out' }}>
@@ -475,31 +517,31 @@ export default function InteractiveModule({ selectedLevel, setSelectedLevel }) {
 
             <form onSubmit={handleLiveEvaluationSubmit} style={{ padding: '24px' }}>
               <div style={{ marginBottom: '24px' }}>
-                <label style={{ fontSize: '12px', fontWeight: '700', color: '#475569', display: 'block', marginBottom: '12px', letterSpacing: '0.5px' }}>1. IDENTIFIKASI MURID PRAKTIKUM</label>
+                <label style={{ fontSize: '12px', fontWeight: '700', color: '#475569', display: 'block', marginBottom: '12px', letterSpacing: '0.5px' }}>1 IDENTIFIKASI MURID PRAKTIKUM</label>
                 {!evalSelectedStudent ? (
                   <div style={{ position: 'relative' }}>
                     <div style={{ position: 'absolute', left: '16px', top: '14px' }}><IconSearch /></div>
-                    <input type="text" placeholder="Ketik nama murid kelas Anda..." value={evalSearchQuery} onChange={(e) => setEvalSearchQuery(e.target.value)} style={inputStyleEnterprise} />
+                    <input type="text" placeholder="Ketik nama murid kelas Anda" value={evalSearchQuery} onChange={(e) => setEvalSearchQuery(e.target.value)} style={inputStyleEnterprise} />
                     {evalSearchQuery && (
                       <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, backgroundColor: '#FFF', border: '1px solid #E2E8F0', borderRadius: '12px', marginTop: '6px', maxHeight: '160px', overflowY: 'auto', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', zIndex: 10 }}>
                         {filteredStudents.length > 0 ? filteredStudents.map(student => (
                           <div key={student.id} onClick={() => setEvalSelectedStudent(student)} style={{ padding: '12px 16px', borderBottom: '1px solid #F8FAFC', cursor: 'pointer', fontSize: '13px', fontWeight: '600', color: '#0F172A' }}>
                             {student.name} <span style={{ color: '#64748B', fontWeight: '500', marginLeft: '8px' }}>({student.class})</span>
                           </div>
-                        )) : <div style={{ padding: '12px 16px', fontSize: '13px', color: '#94A3B8' }}>Murid tidak ditemukan.</div>}
+                        )) : <div style={{ padding: '12px 16px', fontSize: '13px', color: '#94A3B8' }}>Murid tidak ditemukan</div>}
                       </div>
                     )}
                   </div>
                 ) : (
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px', border: '1px solid #E2E8F0', borderRadius: '12px', backgroundColor: '#F8FAFC' }}>
                     <div style={{ fontSize: '14px', fontWeight: '700', color: '#0F172A' }}>{evalSelectedStudent.name}</div>
-                    <button type="button" onClick={() => setEvalSelectedStudent(null)} style={{ background: '#FFFFFF', border: '1px solid #CBD5E1', padding: '6px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: '600', color: '#475569', cursor: 'pointer' }}>Ubah</button>
+                    <button type="button" onClick={() => setEvalSelectedStudent(null)} style={{ background: '#FFFFFF', border: '1px solid #CBD5E1', padding: '6px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: '600', color: '#475569', cursor: 'pointer' }}>Ubah Data</button>
                   </div>
                 )}
               </div>
 
               <div style={{ marginBottom: '32px' }}>
-                <label style={{ fontSize: '12px', fontWeight: '700', color: '#475569', display: 'block', marginBottom: '12px', letterSpacing: '0.5px' }}>2. ALOKASI POIN BINTANG</label>
+                <label style={{ fontSize: '12px', fontWeight: '700', color: '#475569', display: 'block', marginBottom: '12px', letterSpacing: '0.5px' }}>2 ALOKASI POIN BINTANG</label>
                 <div style={{ position: 'relative' }}>
                   <div style={{ position: 'absolute', left: '16px', top: '14px' }}><IconStar /></div>
                   <input type="number" min="1" max="50" value={evalStars} onChange={(e) => setEvalStars(parseInt(e.target.value) || '')} placeholder="Nilai maksimal 50" required style={{ ...inputStyleEnterprise, fontWeight: '700' }} />
@@ -508,11 +550,30 @@ export default function InteractiveModule({ selectedLevel, setSelectedLevel }) {
 
               <div style={{ borderTop: '1px solid #F1F5F9', paddingTop: '24px' }}>
                 <button type="submit" disabled={!evalSelectedStudent || isSubmittingEval} style={{ width: '100%', padding: '16px', backgroundColor: '#0F172A', color: 'white', border: 'none', borderRadius: '12px', fontSize: '15px', fontWeight: '700', cursor: (!evalSelectedStudent || isSubmittingEval) ? 'not-allowed' : 'pointer' }}>
-                  {isSubmittingEval ? 'Merekam ke Peladen...' : 'Konfirmasi Penyelesaian Modul'}
+                  {isSubmittingEval ? 'Merekam ke Peladen' : 'Konfirmasi Penyelesaian Modul'}
                 </button>
               </div>
             </form>
           </div>
+        </div>
+      )}
+
+      {/** Custom System Notification Modal */}
+      {statusModal.isOpen && (
+        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(15, 23, 42, 0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 100000, backdropFilter: 'blur(4px)', animation: 'fadeIn 0.2s' }} onClick={() => setStatusModal({ ...statusModal, isOpen: false })}>
+            <div style={{ backgroundColor: '#FFFFFF', width: isMobileScreen ? '90%' : '400px', borderRadius: '24px', padding: '32px', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)', position: 'relative', animation: 'scaleUp 0.2s', textAlign: 'center' }} onClick={e => e.stopPropagation()}>
+                
+                <div style={{ display: 'inline-flex', justifyContent: 'center', alignItems: 'center', width: '64px', height: '64px', borderRadius: '50%', backgroundColor: statusModal.type === 'success' ? '#ECFDF5' : statusModal.type === 'warning' ? '#FFFBEB' : '#FEF2F2', marginBottom: '20px' }}>
+                    {statusModal.type === 'success' ? <IconCheckCircle /> : statusModal.type === 'warning' ? <IconStar /> : <IconAlertTriangle />}
+                </div>
+                
+                <h3 style={{ margin: '0 0 12px 0', fontSize: '20px', fontWeight: '800', color: '#0F172A' }}>{statusModal.title}</h3>
+                <p style={{ margin: '0 0 32px 0', fontSize: '15px', color: '#475569', lineHeight: '1.6' }}>{statusModal.message}</p>
+                
+                <button onClick={() => setStatusModal({ ...statusModal, isOpen: false })} style={{ width: '100%', padding: '14px', backgroundColor: '#0F172A', color: '#FFFFFF', border: 'none', borderRadius: '12px', fontSize: '14px', fontWeight: '600', cursor: 'pointer', transition: '0.2s' }}>
+                    Tutup Pemberitahuan
+                </button>
+            </div>
         </div>
       )}
 
