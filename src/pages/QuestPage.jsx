@@ -11,6 +11,8 @@ import Pagination from '../components/Pagination';
 
 const IconStar = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="#F59E0B" stroke="#F59E0B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>;
 const IconCameraPlaceholder = () => <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="#0F172A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>;
+const IconList = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>;
+const IconClose = () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>;
 
 const ALPHABET_LABELS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'];
 
@@ -30,6 +32,9 @@ export default function QuestPage() {
   const [signStatus, setSignStatus] = useState("");
   const [aiMessage, setAiMessage] = useState("Mesin visi komputer aktif. Sedang memindai dan mengekstraksi titik koordinat tangan siswa secara aktual...");
   const [isThinking, setIsThinking] = useState(false);
+  
+  /** Mobile drawer visibility state */
+  const [isQuestDrawerOpen, setIsQuestDrawerOpen] = useState(false);
   
   const [tfModel, setTfModel] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -54,7 +59,7 @@ export default function QuestPage() {
         if (!resData.data || resData.data.length === 0) {
           setApiError("Belum ada data misi yang tersedia."); setQuests([]);
         } else {
-          // PERBAIKAN: Logika asli pembagian kategori berdasarkan reward_stars dikembalikan!
+          /** Map quest categories based on reward stars distribution */
           const processedQuests = resData.data.map(q => {
             let cat = "Abjad"; 
             if (q.reward_stars >= 100 && q.reward_stars <= 150) cat = "Kosa Kata";
@@ -75,7 +80,7 @@ export default function QuestPage() {
       const loadModel = async () => {
         if (tfModel) tfModel.dispose(); 
         try {
-          // Tetap gunakan model abjad dulu untuk menghindari crash model kosa kata
+          /** Temporarily use alphabet model to prevent vocabulary model initialization errors */
           const modelUrl = `http://127.0.0.1:8000/serve-ai/abjad/model.json?v=${new Date().getTime()}`;
           const loadedModel = await tf.loadLayersModel(modelUrl);
           setTfModel(loadedModel);
@@ -134,6 +139,9 @@ export default function QuestPage() {
 
   useEffect(() => {
     if (!activeQuest || !tfModel) return;
+    
+    /** Suspend camera processing during mobile drawer interaction to optimize performance */
+    if (isQuestDrawerOpen) return;
 
     const hands = new Hands({ locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}` });
     hands.setOptions({ maxNumHands: 2, modelComplexity: 1, minDetectionConfidence: 0.8, minTrackingConfidence: 0.85 });
@@ -178,9 +186,11 @@ export default function QuestPage() {
         });
 
         const isCorrect = (detectedLabel && detectedLabel.toLowerCase() === activeQuest.target_gesture.toLowerCase());
-        baseStatus = isCorrect ? `Valid` : `Terdeteksi: ${detectedLabel}`;
+        
+        /** UX enhancement conceal gesture names during transition or misclassification */
+        baseStatus = isCorrect ? `Valid` : `Menganalisis kecocokan gestur...`;
 
-        if (isCorrect && displayPercentage >= 90) {
+        if (isCorrect && displayPercentage >= 80) {
             successFrameCount.current += 1;
             if (successFrameCount.current >= 15 && !isThinking) {
                setIsThinking(true);
@@ -216,101 +226,123 @@ export default function QuestPage() {
     }
     return () => { if (cameraInstance) cameraInstance.stop(); hands.close(); };
     
-  }, [activeQuest, isThinking, tfModel]); 
+  }, [activeQuest, isThinking, tfModel, isQuestDrawerOpen]); 
+
+  /** Handle quest selection and automatically close mobile drawer */
+  const handleSelectQuest = (quest) => {
+      setActiveQuest(quest);
+      if (isMobileScreen) {
+          setIsQuestDrawerOpen(false);
+      }
+  };
+
+  /** Reusable catalog content component for desktop and mobile drawer */
+  const CatalogContent = () => (
+      <>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+          {!isMobileScreen && <h2 style={{ margin: 0, fontSize: '18px', fontWeight: '800', color: '#0F172A' }}>Katalog Tantangan</h2>}
+          <div style={{ width: isMobileScreen ? '100%' : 'auto' }}>
+            <FilterTabs categories={categories} activeFilter={activeFilter} setActiveFilter={setActiveFilter} />
+          </div>
+        </div>
+
+        {isLoading ? (
+          <div style={{ display: 'flex', padding: '40px 0', justifyContent: 'center', color: '#64748B' }}>Memuat data misi...</div>
+        ) : apiError ? (
+          <div style={{ padding: '24px', backgroundColor: '#FEF2F2', border: '1px solid #FCA5A5', borderRadius: '16px', color: '#DC2626' }}>{apiError}</div>
+        ) : currentQuests.length === 0 ? (
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '48px 24px', border: '1px dashed #CBD5E1', borderRadius: '16px', textAlign: 'center' }}>
+              <p style={{ margin: 0, fontSize: '14px', fontWeight: '500', color: '#64748B' }}>
+                Tidak ada misi yang tersedia untuk kategori <strong>{activeFilter}</strong> saat ini.
+              </p>
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {currentQuests.map((quest, index) => (
+                <QuestCard 
+                  key={quest.id} 
+                  quest={quest} 
+                  index={(currentPage - 1) * itemsPerPage + index}
+                  isActive={activeQuest?.id === quest.id}
+                  onClick={() => handleSelectQuest(quest)} 
+                />
+              ))}
+          </div>
+        )}
+        
+        {!isLoading && !apiError && currentQuests.length > 0 && <Pagination currentPage={currentPage} totalPages={totalPages} setCurrentPage={setCurrentPage} />}
+      </>
+  );
 
   return (
-    <main style={{ flex: 1, display: 'flex', flexDirection: 'column', overflowY: 'auto', backgroundColor: '#F8FAFC' }}>
+    <main style={{ flex: 1, display: 'flex', flexDirection: 'column', overflowY: 'auto', overflowX: 'hidden', backgroundColor: '#F8FAFC' }}>
       
       <div style={{ padding: isDesktop ? '40px 48px' : '24px 16px', maxWidth: '1400px', margin: '0 auto', width: '100%', boxSizing: 'border-box' }}>
         
-        {/* HEADER */}
-        <div style={{ marginBottom: '32px' }}>
-          <h1 style={{ margin: '0 0 12px 0', fontSize: isMobileScreen ? '28px' : '36px', fontWeight: '800', color: '#0F172A', letterSpacing: '-0.5px' }}>Papan Misi Harian</h1>
-          <p style={{ margin: 0, fontSize: '15px', fontWeight: '400', color: '#475569', maxWidth: '500px', lineHeight: '1.6' }}>Selesaikan tantangan untuk mengumpulkan bintang dan jadilah pemenang.</p>
+        {/** Header Section with Mobile Drawer Trigger */}
+        <div style={{ display: 'flex', flexDirection: isMobileScreen ? 'column' : 'row', justifyContent: 'space-between', alignItems: isMobileScreen ? 'flex-start' : 'center', gap: '16px', marginBottom: '32px' }}>
+          <div>
+            <h1 style={{ margin: '0 0 8px 0', fontSize: isMobileScreen ? '28px' : '36px', fontWeight: '800', color: '#0F172A', letterSpacing: '-0.5px' }}>Papan Misi Harian</h1>
+            <p style={{ margin: 0, fontSize: '15px', fontWeight: '400', color: '#475569', maxWidth: '500px', lineHeight: '1.6' }}>Selesaikan tantangan untuk mengumpulkan bintang dan jadilah pemenang.</p>
+          </div>
+          
+          {isMobileScreen && (
+            <button 
+                onClick={() => setIsQuestDrawerOpen(true)} 
+                style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '12px 24px', backgroundColor: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: '999px', cursor: 'pointer', fontSize: '14px', fontWeight: '600', color: '#0F172A', transition: '0.2s', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', whiteSpace: 'nowrap' }}
+            >
+                <IconList /> Semua Misi
+            </button>
+          )}
         </div>
 
-        {/* LAYOUT TERBAGI DUA */}
+        {/** Main Layout Architecture */}
         <div style={{ display: 'flex', flexDirection: isDesktop ? 'row' : 'column', gap: '32px', width: '100%', boxSizing: 'border-box' }}>
           
-          {/* KOLOM KIRI: DAFTAR MISI */}
-          <div style={{ flex: '1', display: 'flex', flexDirection: 'column', minWidth: 0, backgroundColor: '#FFFFFF', padding: '24px', borderRadius: '24px', border: '1px solid #E2E8F0' }}>
-             
-             {/* Header Kolom Kiri */}
-             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-               <h2 style={{ margin: 0, fontSize: '18px', fontWeight: '800', color: '#0F172A' }}>Katalog Tantangan Tersedia</h2>
-               <FilterTabs categories={categories} activeFilter={activeFilter} setActiveFilter={setActiveFilter} />
+          {/** Left Column Catalog Desktop View */}
+          {!isMobileScreen && (
+             <div style={{ flex: '1', display: 'flex', flexDirection: 'column', minWidth: 0, backgroundColor: '#FFFFFF', padding: '24px', borderRadius: '24px', border: '1px solid #E2E8F0' }}>
+               <CatalogContent />
              </div>
+          )}
 
-             {isLoading ? (
-                <div style={{ display: 'flex', padding: '40px 0', justifyContent: 'center', color: '#64748B' }}>Memuat data misi...</div>
-             ) : apiError ? (
-                <div style={{ padding: '24px', backgroundColor: '#FEF2F2', border: '1px solid #FCA5A5', borderRadius: '16px', color: '#DC2626' }}>{apiError}</div>
-             ) : currentQuests.length === 0 ? (
-                /* PERBAIKAN: Tampilan Empty State jika data filter kosong */
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '48px 24px', border: '1px dashed #CBD5E1', borderRadius: '16px', textAlign: 'center' }}>
-                   <p style={{ margin: 0, fontSize: '14px', fontWeight: '500', color: '#64748B' }}>
-                     Tidak ada misi yang tersedia untuk kategori <strong>{activeFilter}</strong> saat ini.
-                   </p>
-                </div>
-             ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                   {currentQuests.map((quest, index) => (
-                     <QuestCard 
-                        key={quest.id} 
-                        quest={quest} 
-                        index={(currentPage - 1) * itemsPerPage + index}
-                        isActive={activeQuest?.id === quest.id}
-                        onClick={setActiveQuest} 
-                     />
-                   ))}
-                </div>
-             )}
-             
-             {!isLoading && !apiError && currentQuests.length > 0 && <Pagination currentPage={currentPage} totalPages={totalPages} setCurrentPage={setCurrentPage} />}
-          </div>
-
-          {/* KOLOM KANAN: KAMERA & EVALUASI */}
+          {/** Right Column Camera and Evaluation View */}
           <div style={{ flex: isDesktop ? '1.2' : 'none', position: 'relative', display: 'flex', flexDirection: 'column', gap: '16px' }}>
              
-             {/* Box Kamera 1 */}
-             <div style={{ backgroundColor: '#FFFFFF', padding: '24px', borderRadius: '24px', border: '1px solid #E2E8F0', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '380px' }}>
-                <div style={{ position: 'relative', width: '100%', aspectRatio: '4/3', borderRadius: '16px', overflow: 'hidden', backgroundColor: '#F8FAFC' }}>
+             {/** Primary Camera Container */}
+             <div style={{ backgroundColor: '#FFFFFF', padding: isMobileScreen ? '16px' : '24px', borderRadius: '24px', border: '1px solid #E2E8F0', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: isMobileScreen ? '300px' : '380px' }}>
+                <div style={{ position: 'relative', width: '100%', aspectRatio: '4/3', borderRadius: '16px', overflow: 'hidden', backgroundColor: '#000000' }}>
                    
                    <Webcam ref={webcamRef} mirrored={true} style={{ position: 'absolute', width: '100%', height: '100%', left: 0, top: 0, objectFit: 'cover' }} />
                    <canvas ref={canvasRef} style={{ position: 'absolute', width: '100%', height: '100%', left: 0, top: 0, zIndex: 10 }} />
                    
-                   {signStatus.includes("Tahan") && (
-                     <div style={{ position: 'absolute', bottom: '24px', left: '50%', transform: 'translateX(-50%)', zIndex: 15, backgroundColor: '#0F172A', padding: '12px 24px', borderRadius: '99px', color: '#FFFFFF', fontSize: '15px', fontWeight: '700', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
+                   {signStatus && (
+                     <div style={{ position: 'absolute', bottom: '24px', left: '50%', transform: 'translateX(-50%)', zIndex: 15, backgroundColor: signStatus.includes("Valid") || signStatus.includes("Selesai") || signStatus.includes("Tahan") ? 'rgba(16, 185, 129, 0.9)' : 'rgba(15, 23, 42, 0.8)', padding: '10px 20px', borderRadius: '99px', color: '#FFFFFF', fontSize: '14px', fontWeight: '600', boxShadow: '0 4px 6px rgba(0,0,0,0.1)', whiteSpace: 'nowrap' }}>
                         {signStatus}
                      </div>
                    )}
 
                    {!activeQuest && (
-                      <div style={{ position: 'absolute', inset: 0, zIndex: 15, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', color: '#0F172A' }}>
+                      <div style={{ position: 'absolute', inset: 0, zIndex: 15, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', color: '#475569', backgroundColor: '#F8FAFC' }}>
                          <IconCameraPlaceholder />
-                         <span style={{ marginTop: '16px', fontSize: '24px', fontWeight: '800' }}>Camera</span>
+                         <span style={{ marginTop: '16px', fontSize: '20px', fontWeight: '800', color: '#0F172A' }}>Kamera Standby</span>
+                         <span style={{ marginTop: '8px', fontSize: '13px', textAlign: 'center', padding: '0 24px' }}>Pilih misi terlebih dahulu untuk mengaktifkan AI.</span>
                       </div>
                    )}
                 </div>
              </div>
 
-             {/* Log Analisis Box 2 */}
-             <div style={{ backgroundColor: '#FFFFFF', borderRadius: '16px', padding: '24px', border: '1px solid #E2E8F0' }}>
-                <span style={{ fontSize: '12px', fontWeight: '600', color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Log Analisis AI</span>
-                <p style={{ margin: '8px 0 0 0', fontSize: '14px', color: '#0F172A', lineHeight: '1.6' }}>{aiMessage}</p>
-             </div>
-
-             {/* Referensi Quest Aktif Box 3 */}
+             {/** Active Quest Reference Container */}
              {activeQuest && (
-               <div style={{ backgroundColor: '#FFFFFF', borderRadius: '16px', padding: '20px', border: '1px solid #E2E8F0', display: 'flex', gap: '20px', alignItems: 'center' }}>
-                 <div style={{ width: '80px', height: '80px', backgroundColor: '#F1F5F9', borderRadius: '12px', flexShrink: 0, border: '1px solid #E2E8F0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <span style={{ fontSize: '32px', fontWeight: '800', color: '#0F172A' }}>{activeQuest.target_gesture}</span>
+               <div style={{ backgroundColor: '#FFFFFF', borderRadius: '24px', padding: isMobileScreen ? '16px' : '20px', border: '1px solid #E2E8F0', display: 'flex', gap: '16px', alignItems: 'center' }}>
+                 <div style={{ width: isMobileScreen ? '60px' : '80px', height: isMobileScreen ? '60px' : '80px', backgroundColor: '#F1F5F9', borderRadius: '16px', flexShrink: 0, border: '1px solid #E2E8F0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <span style={{ fontSize: isMobileScreen ? '24px' : '32px', fontWeight: '800', color: '#0F172A' }}>{activeQuest.target_gesture}</span>
                  </div>
                  <div style={{ flex: 1 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px', flexWrap: 'wrap', gap: '8px' }}>
                       <h4 style={{ margin: 0, fontSize: '16px', fontWeight: '800', color: '#0F172A' }}>{activeQuest.title}</h4>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', backgroundColor: '#FFFBEB', padding: '6px 12px', borderRadius: '99px' }}>
-                         <IconStar /> <span style={{ fontSize: '14px', fontWeight: '800', color: '#B45309' }}>+{activeQuest.reward_stars}</span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', backgroundColor: '#FFFBEB', padding: '4px 10px', borderRadius: '99px' }}>
+                         <IconStar /> <span style={{ fontSize: '13px', fontWeight: '800', color: '#B45309' }}>+{activeQuest.reward_stars}</span>
                       </div>
                     </div>
                     <p style={{ margin: 0, fontSize: '13px', color: '#64748B', lineHeight: '1.5' }}>{activeQuest.description}</p>
@@ -318,10 +350,41 @@ export default function QuestPage() {
                </div>
              )}
 
-          </div>
+             {/** AI Analysis Log Container */}
+             <div style={{ backgroundColor: '#FFFFFF', borderRadius: '24px', padding: isMobileScreen ? '20px' : '24px', border: '1px solid #E2E8F0' }}>
+                <span style={{ display: 'block', fontSize: '11px', fontWeight: '700', color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '12px' }}>Log Analisis AI</span>
+                <div style={{ backgroundColor: '#F8FAFC', padding: '16px', borderRadius: '12px', borderLeft: '4px solid #0F172A' }}>
+                    <p style={{ margin: 0, fontSize: '14px', color: '#0F172A', lineHeight: '1.6', fontWeight: '500' }}>{aiMessage}</p>
+                </div>
+             </div>
 
+          </div>
         </div>
       </div>
+
+      {/** Mobile View Catalog Drawer */}
+      {isMobileScreen && isQuestDrawerOpen && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 99999, backgroundColor: 'rgba(15, 23, 42, 0.6)', display: 'flex', justifyContent: 'flex-end', animation: 'fadeIn 0.3s ease' }} onClick={() => setIsQuestDrawerOpen(false)}>
+            <div style={{ width: '90%', maxWidth: '380px', height: '100%', backgroundColor: '#F8FAFC', display: 'flex', flexDirection: 'column', animation: 'slideInRight 0.3s ease', boxShadow: '-10px 0 25px rgba(0,0,0,0.1)' }} onClick={e => e.stopPropagation()}>
+                
+                <div style={{ padding: '20px 24px', borderBottom: '1px solid #E2E8F0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#FFFFFF' }}>
+                    <h2 style={{ margin: 0, fontSize: '18px', fontWeight: '800', color: '#0F172A' }}>Katalog Misi</h2>
+                    <button onClick={() => setIsQuestDrawerOpen(false)} style={{ background: '#F1F5F9', border: 'none', width: '36px', height: '36px', borderRadius: '50%', display: 'flex', justifyContent: 'center', alignItems: 'center', cursor: 'pointer', color: '#64748B' }}>
+                        <IconClose/>
+                    </button>
+                </div>
+
+                <div style={{ padding: '24px', overflowY: 'auto', flex: 1, backgroundColor: '#FFFFFF' }}>
+                    <CatalogContent />
+                </div>
+            </div>
+        </div>
+      )}
+
+      <style>{`
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideInRight { from { transform: translateX(100%); } to { transform: translateX(0); } }
+      `}</style>
     </main>
   );
 }

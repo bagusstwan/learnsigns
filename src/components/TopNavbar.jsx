@@ -75,7 +75,6 @@ export default function TopNavbar({ activeMenu, setActiveMenu, selectedLevel, us
   useEffect(() => {
     let isMounted = true;
 
-    /** Fetch latest user profile data from server */
     const fetchLatestPoints = async () => {
       try {
         const token = localStorage.getItem('token');
@@ -92,7 +91,6 @@ export default function TopNavbar({ activeMenu, setActiveMenu, selectedLevel, us
           if (isMounted && userData && userData.stars !== undefined) {
             setCurrentPoints(userData.stars);
 
-            /** Update local storage cache silently */
             const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
             storedUser.stars = userData.stars;
             localStorage.setItem('user', JSON.stringify(storedUser));
@@ -104,11 +102,7 @@ export default function TopNavbar({ activeMenu, setActiveMenu, selectedLevel, us
     };
 
     fetchLatestPoints();
-
-    /** Poll data every five seconds to ensure real time updates */
     const intervalId = setInterval(fetchLatestPoints, 5000);
-
-    /** Refresh data when window regains focus */
     window.addEventListener('focus', fetchLatestPoints);
 
     return () => {
@@ -165,7 +159,7 @@ export default function TopNavbar({ activeMenu, setActiveMenu, selectedLevel, us
       display: 'flex', 
       justifyContent: 'space-between', 
       alignItems: 'center', 
-      padding: isMobile ? '10px 16px' : '12px 48px',
+      padding: isMobile ? '12px 16px' : '12px 48px',
       backgroundColor: '#F8FAFC', 
       borderBottom: '1px solid #E2E8F0',
       width: '100%',
@@ -175,37 +169,49 @@ export default function TopNavbar({ activeMenu, setActiveMenu, selectedLevel, us
       zIndex: 30
     }}>
       
-      {/** Left Section Breadcrumb */}
+      {/** Left Section: Breadcrumb / Title */}
       <div style={{ 
         fontSize: '13px',
         fontWeight: '500', 
         color: '#64748B',
-        letterSpacing: '0.2px'
+        letterSpacing: '0.2px',
+        overflow: 'hidden',
+        textOverflow: 'ellipsis',
+        whiteSpace: 'nowrap',
+        marginRight: '8px'
       }}>
-        Dashboard <span style={{ margin: '0 6px', color: '#CBD5E1' }}>/</span> 
-        <span style={{ color: '#0F172A', fontWeight: '600' }}>{getPageSubtitle()}</span>
+        {!isMobile && (
+          <>
+            Dashboard <span style={{ margin: '0 6px', color: '#CBD5E1' }}>/</span>
+          </>
+        )}
+        <span style={{ color: '#0F172A', fontWeight: '600' }}>
+          {getPageSubtitle()}
+        </span>
       </div>
 
       {/** Right Section Actions */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '12px' : '16px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '8px' : '16px', flexShrink: 0 }}>
         
-        {/** Live Point Display */}
-        <div style={{ 
-          display: 'flex', 
-          alignItems: 'center', 
-          gap: '6px', 
-          backgroundColor: '#FFFFFF', 
-          color: '#0F172A', 
-          border: '1px solid #E2E8F0', 
-          borderRadius: '999px', 
-          padding: '6px 14px', 
-          fontSize: '13px', 
-          fontWeight: '700',
-          boxShadow: '0 1px 2px rgba(0,0,0,0.02)'
-        }}>
-          <IconCoinGeneric />
-          {currentPoints} Point
-        </div>
+        {/** Live Point Display - HANYA DITAMPILKAN DI DESKTOP */}
+        {!isMobile && (
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '6px', 
+            backgroundColor: '#FFFFFF', 
+            color: '#0F172A', 
+            border: '1px solid #E2E8F0', 
+            borderRadius: '999px', 
+            padding: '6px 14px', 
+            fontSize: '13px', 
+            fontWeight: '700',
+            boxShadow: '0 1px 2px rgba(0,0,0,0.02)'
+          }}>
+            <IconCoinGeneric />
+            {currentPoints} Point
+          </div>
+        )}
 
         {/** Notification Button */}
         <button style={{ 
@@ -240,15 +246,15 @@ export default function TopNavbar({ activeMenu, setActiveMenu, selectedLevel, us
               backgroundColor: isDropdownOpen ? '#F1F5F9' : '#FFFFFF', 
               border: '1px solid #E2E8F0', 
               borderRadius: '999px', 
-              padding: '4px 12px 4px 4px',
+              padding: isMobile ? '3px' : '4px 12px 4px 4px',
               cursor: 'pointer',
               boxShadow: '0 1px 2px rgba(0,0,0,0.02)',
               transition: 'all 0.2s'
             }}
           >
             <div style={{ 
-              width: '30px', 
-              height: '30px', 
+              width: '32px', 
+              height: '32px', 
               borderRadius: '50%', 
               backgroundColor: '#0F172A', 
               color: '#FFFFFF', 
@@ -273,16 +279,18 @@ export default function TopNavbar({ activeMenu, setActiveMenu, selectedLevel, us
               </div>
             )}
             
-            <div style={{ 
-              marginLeft: '4px', 
-              display: isMobile ? 'none' : 'flex', 
-              alignItems: 'center', 
-              justifyContent: 'center',
-              transform: isDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)', 
-              transition: 'transform 0.2s' 
-            }}>
-              <IconChevronDown />
-            </div>
+            {!isMobile && (
+              <div style={{ 
+                marginLeft: '4px', 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center',
+                transform: isDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)', 
+                transition: 'transform 0.2s' 
+              }}>
+                <IconChevronDown />
+              </div>
+            )}
           </button>
 
           {/** Floating Dropdown Menu */}
@@ -291,7 +299,7 @@ export default function TopNavbar({ activeMenu, setActiveMenu, selectedLevel, us
               position: 'absolute', 
               top: 'calc(100% + 8px)', 
               right: 0, 
-              width: '220px', 
+              width: '230px', 
               backgroundColor: '#FFFFFF', 
               border: '1px solid #E2E8F0', 
               borderRadius: '16px', 
@@ -303,10 +311,31 @@ export default function TopNavbar({ activeMenu, setActiveMenu, selectedLevel, us
               gap: '4px',
               animation: 'slideDown 0.2s ease'
             }}>
+              {/* Header Info Profil */}
               <div style={{ padding: '8px 12px', borderBottom: '1px solid #F1F5F9', marginBottom: '4px' }}>
                 <p style={{ margin: 0, fontSize: '13px', fontWeight: '700', color: '#0F172A', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{user?.name}</p>
                 <p style={{ margin: 0, fontSize: '12px', color: '#64748B', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{user?.email}</p>
               </div>
+
+              {/* Point Card Khusus Tampilan Mobile */}
+              {isMobile && (
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  backgroundColor: '#FEF3C7',
+                  border: '1px solid #FDE68A',
+                  padding: '8px 12px',
+                  borderRadius: '10px',
+                  margin: '0 4px 6px 4px'
+                }}>
+                  <span style={{ fontSize: '12px', fontWeight: '600', color: '#92400E' }}>Total Poin</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontWeight: '700', color: '#78350F' }}>
+                    <IconCoinGeneric />
+                    {currentPoints} Pts
+                  </div>
+                </div>
+              )}
               
               <button onClick={() => handleMenuClick('profile')} className="dropdown-item">
                 <IconUser /> Profil Saya

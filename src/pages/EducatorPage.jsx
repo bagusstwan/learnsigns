@@ -167,7 +167,7 @@ export default function EducatorPage() {
   }
 
   return (
-    <main style={{ flex: 1, display: 'flex', flexDirection: 'column', overflowY: 'auto', padding: paddingMain, boxSizing: 'border-box', backgroundColor: '#F8FAFC' }}>
+    <main style={{ flex: 1, display: 'flex', flexDirection: 'column', overflowY: 'auto', overflowX: 'hidden', padding: paddingMain, boxSizing: 'border-box', backgroundColor: '#F8FAFC' }}>
       
       <div style={{ maxWidth: '1400px', margin: '0 auto', width: '100%' }}>
         
@@ -177,7 +177,18 @@ export default function EducatorPage() {
             Teacher Command Center
           </h1>
           
-          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+          {/* PERBAIKAN 1: Scroll Horizontal untuk Capsule Tabs di Mobile */}
+          <div 
+            className="hide-scrollbar" 
+            style={{ 
+              display: 'flex', 
+              gap: '12px', 
+              flexWrap: isMobile ? 'nowrap' : 'wrap', 
+              overflowX: isMobile ? 'auto' : 'visible',
+              WebkitOverflowScrolling: 'touch',
+              paddingBottom: isMobile ? '4px' : '0'
+            }}
+          >
             {['Delegasi Baru', 'Riwayat Tugas', 'Monitoring', 'Pengaturan'].map((tab) => (
               <button 
                 key={tab} 
@@ -191,7 +202,9 @@ export default function EducatorPage() {
                   fontSize: '13px', 
                   fontWeight: '600', 
                   cursor: 'pointer',
-                  transition: 'all 0.2s'
+                  transition: 'all 0.2s',
+                  whiteSpace: 'nowrap',
+                  flexShrink: 0
                 }}
               >
                 {tab}
@@ -254,11 +267,11 @@ export default function EducatorPage() {
                       </div>
                       <button 
                         type="button" onClick={() => setIsStudentModalOpen(true)}
-                        style={{ background: '#F8FAFC', border: '1px solid #E2E8F0', padding: '8px 16px', borderRadius: '99px', fontSize: '13px', fontWeight: '700', color: '#0F172A', cursor: 'pointer', transition: 'all 0.2s' }}
+                        style={{ background: '#F8FAFC', border: '1px solid #E2E8F0', padding: '8px 16px', borderRadius: '99px', fontSize: '13px', fontWeight: '700', color: '#0F172A', cursor: 'pointer', transition: 'all 0.2s', whiteSpace: 'nowrap' }}
                         onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#E2E8F0'}
                         onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#F8FAFC'}
                       >
-                        Ganti Murid
+                        Ganti
                       </button>
                     </div>
                   )}
@@ -309,7 +322,7 @@ export default function EducatorPage() {
               </form>
             </div>
           ) : (
-            <div style={{ flex: isDesktop ? '1.1' : 'none', display: activeTab === 'Pengaturan' ? 'block' : 'none' }}>
+            <div style={{ flex: isDesktop ? '1.1' : 'none', display: activeTab === 'Pengaturan' ? 'block' : 'none', width: '100%' }}>
                {/* Placeholder for settings or future tabs */}
                <div style={{ padding: '60px 24px', textAlign: 'center', backgroundColor: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: '24px' }}>
                   <p style={{ fontSize: '15px', fontWeight: '600', color: '#64748B' }}>Menu {activeTab} sedang dalam tahap pengembangan.</p>
@@ -319,26 +332,44 @@ export default function EducatorPage() {
 
           {/* Right Column: Assignment Monitoring Area */}
           {(activeTab !== 'Pengaturan') && (
-            <div style={{ flex: isDesktop ? '1' : 'none', display: 'flex', flexDirection: 'column', width: '100%' }}>
+            <div style={{ flex: isDesktop ? '1' : 'none', display: 'flex', flexDirection: 'column', width: '100%', minWidth: 0 }}>
               
               {/* Premium Search Bar */}
               <div style={{ display: 'flex', backgroundColor: '#FFFFFF', borderRadius: '999px', border: '1px solid #E2E8F0', padding: '6px', overflow: 'hidden', marginBottom: '32px', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
                 <input 
                   type="text" placeholder="Cari penugasan siswa..." 
                   value={searchTaskQuery} onChange={(e) => setSearchTaskQuery(e.target.value)} 
-                  style={{ flex: 1, border: 'none', outline: 'none', padding: '10px 20px', fontSize: '14px', backgroundColor: 'transparent', color: '#0F172A' }} 
+                  style={{ flex: 1, border: 'none', outline: 'none', padding: '10px 20px', fontSize: '14px', backgroundColor: 'transparent', color: '#0F172A', minWidth: '100px' }} 
                 />
-                <button style={{ backgroundColor: '#0F172A', color: 'white', border: 'none', borderRadius: '999px', padding: '10px 28px', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '14px', fontWeight: '600' }}>
-                  <IconSearchWhite /> Search
+                <button style={{ backgroundColor: '#0F172A', color: 'white', border: 'none', borderRadius: '999px', padding: '10px 24px', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '14px', fontWeight: '600' }}>
+                  <IconSearchWhite /> {!isMobile && "Search"}
                 </button>
               </div>
 
-              {/* Assignment Cards List */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+              {/* PERBAIKAN 2: Carousel Scroll Horizontal untuk Assignment Cards di Mobile */}
+              <div 
+                className={isMobile ? "hide-scrollbar" : ""} 
+                style={{ 
+                  display: 'flex', 
+                  flexDirection: isMobile ? 'row' : 'column', 
+                  gap: '20px',
+                  overflowX: isMobile ? 'auto' : 'visible',
+                  scrollSnapType: isMobile ? 'x mandatory' : 'none',
+                  paddingBottom: isMobile ? '16px' : '0' // Ruang untuk bayangan kartu
+                }}
+              >
                 {paginatedAssignments.length > 0 ? paginatedAssignments.map((task) => (
-                  <AssignmentCard key={task.id} task={task} onOpenEvalModal={openEvalModal} />
+                  <div 
+                    key={task.id} 
+                    style={{ 
+                      flex: isMobile ? '0 0 88%' : 'auto', 
+                      scrollSnapAlign: isMobile ? 'center' : 'none' 
+                    }}
+                  >
+                    <AssignmentCard task={task} onOpenEvalModal={openEvalModal} />
+                  </div>
                 )) : (
-                  <div style={{ padding: '80px 24px', textAlign: 'center' }}>
+                  <div style={{ padding: '80px 24px', textAlign: 'center', width: '100%' }}>
                     <div style={{ width: '64px', height: '64px', borderRadius: '50%', backgroundColor: '#F1F5F9', display: 'flex', justifyContent: 'center', alignItems: 'center', margin: '0 auto 16px auto' }}>
                       <IconSearchGray />
                     </div>
@@ -349,7 +380,7 @@ export default function EducatorPage() {
               
               {/* Functional Pagination UI */}
               {totalPages > 1 && (
-                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '16px', marginTop: '40px', color: '#64748B', fontSize: '14px', fontWeight: '600' }}>
+                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '16px', marginTop: '24px', color: '#64748B', fontSize: '14px', fontWeight: '600' }}>
                   <button 
                     onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                     disabled={currentPage === 1}
@@ -413,7 +444,7 @@ export default function EducatorPage() {
                     onMouseOver={(e) => { e.currentTarget.style.borderColor = '#0F172A'; e.currentTarget.style.backgroundColor = '#F8FAFC'; }}
                     onMouseOut={(e) => { e.currentTarget.style.borderColor = '#E2E8F0'; e.currentTarget.style.backgroundColor = 'transparent'; }}
                   >
-                    <div style={{ width: '42px', height: '42px', borderRadius: '50%', backgroundColor: '#0F172A', color: '#FFFFFF', display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: '14px', fontWeight: '800' }}>
+                    <div style={{ width: '42px', height: '42px', borderRadius: '50%', backgroundColor: '#0F172A', color: '#FFFFFF', display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: '14px', fontWeight: '800', flexShrink: 0 }}>
                       {student.name?.charAt(0).toUpperCase()}
                     </div>
                     <div>
@@ -440,6 +471,15 @@ export default function EducatorPage() {
 
       <style>{`
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        /* CSS Sakti untuk Menyembunyikan Bilah Gulir (Scrollbar) */
+        .hide-scrollbar::-webkit-scrollbar {
+          display: none;
+        }
+        .hide-scrollbar {
+          -ms-overflow-style: none;  /* Untuk IE dan Edge */
+          scrollbar-width: none;  /* Untuk Firefox */
+        }
       `}</style>
     </main>
   );

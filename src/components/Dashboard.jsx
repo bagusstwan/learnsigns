@@ -25,30 +25,22 @@ const IconClipboard = () => <svg width="18" height="18" viewBox="0 0 24 24" fill
 
 export default function Dashboard({ setSelectedLevel, isMobile, isDesktop }) {
   
-  /** Tab States for Main Left Panel */
   const [activeTab, setActiveTab] = useState('tugas_berjalan');
-  
-  /** Feature States for Layout View Mode Filter and Sort */
   const [viewMode, setViewMode] = useState('grid');
   const [filterType, setFilterType] = useState('Semua');
   const [sortOrder, setSortOrder] = useState('terbaru');
   
-  /** Popup Visibility States */
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isSortOpen, setIsSortOpen] = useState(false);
   
-  /** Refs for Outside Click Detection */
   const filterRef = useRef(null);
   const sortRef = useRef(null);
 
-  /** States for Right Panel Evaluation Tabs */
   const [activeEvalTab, setActiveEvalTab] = useState('perlu_dinilai');
   
-  /** States for Modal Detail Document */
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [selectedAssignmentDetail, setSelectedAssignmentDetail] = useState(null);
 
-  /** API and Data Management States */
   const [isLoading, setIsLoading] = useState(true);
   const [dashboardData, setDashboardData] = useState({
     stats: { active_students: 0, completed_modules: 0, pending_evaluations: 0 },
@@ -56,7 +48,6 @@ export default function Dashboard({ setSelectedLevel, isMobile, isDesktop }) {
     pending_students: []
   });
 
-  /** Calendar Mechanism Configuration */
   const today = new Date();
   const [selectedDate, setSelectedDate] = useState(today);
   const [calendarStart, setCalendarStart] = useState(() => {
@@ -80,7 +71,6 @@ export default function Dashboard({ setSelectedLevel, isMobile, isDesktop }) {
 
   const currentMonthYear = calendarStart.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
 
-  /** Database Initialization Effect */
   useEffect(() => {
     const fetchDashboardData = async () => {
       setIsLoading(true);
@@ -112,7 +102,6 @@ export default function Dashboard({ setSelectedLevel, isMobile, isDesktop }) {
     fetchDashboardData();
   }, []);
 
-  /** Click Outside Detectors for Dropdowns */
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (filterRef.current && !filterRef.current.contains(event.target)) setIsFilterOpen(false);
@@ -122,36 +111,19 @@ export default function Dashboard({ setSelectedLevel, isMobile, isDesktop }) {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  /**
-   * Evaluates and processes data for the Main Module Section based on the selected tab filter and sorting criteria
-   */
   const getProcessedModules = () => {
     if (activeTab === 'riwayat') return [];
-    
     let processedList = dashboardData.active_modules || [];
-
-    if (filterType !== 'Semua') {
-      processedList = processedList.filter(mod => mod.level === filterType);
-    }
-
-    if (sortOrder === 'a-z') {
-      processedList = [...processedList].sort((a, b) => a.title.localeCompare(b.title));
-    } else if (sortOrder === 'z-a') {
-      processedList = [...processedList].sort((a, b) => b.title.localeCompare(a.title));
-    }
-
+    if (filterType !== 'Semua') processedList = processedList.filter(mod => mod.level === filterType);
+    if (sortOrder === 'a-z') processedList = [...processedList].sort((a, b) => a.title.localeCompare(b.title));
+    else if (sortOrder === 'z-a') processedList = [...processedList].sort((a, b) => b.title.localeCompare(a.title));
     return processedList;
   };
 
-  /**
-   * Filters pending students strictly based on the active evaluation tab selection
-   */
   const getFilteredPendingStudents = () => {
     if (!dashboardData.pending_students) return [];
     if (activeEvalTab === 'selesai') return []; 
-    if (activeEvalTab === 'berjalan') {
-      return dashboardData.pending_students.filter(student => student.status === 'Belum Dikerjakan' || student.status === 'Sedang Dikerjakan');
-    }
+    if (activeEvalTab === 'berjalan') return dashboardData.pending_students.filter(student => student.status === 'Belum Dikerjakan' || student.status === 'Sedang Dikerjakan');
     return dashboardData.pending_students.filter(student => student.status === 'Menunggu Penilaian' || student.status === 'Belum Dinilai');
   };
 
@@ -194,7 +166,7 @@ export default function Dashboard({ setSelectedLevel, isMobile, isDesktop }) {
     <>
     <div style={{ display: 'flex', flexDirection: isDesktop ? 'row' : 'column', width: '100%', minHeight: '100vh', backgroundColor: '#F8FAFC', boxSizing: 'border-box' }}>
       
-      <main style={{ flex: 1, padding: isMobile ? '24px 16px' : '40px 48px', overflowY: 'auto', boxSizing: 'border-box' }}>
+      <main style={{ flex: isDesktop ? 1 : 'none', padding: isMobile ? '24px 16px' : '40px 48px', overflowY: isDesktop ? 'auto' : 'visible', boxSizing: 'border-box', width: '100%' }}>
         
         <div style={{ marginBottom: '40px' }}>
           <h1 style={{ margin: '8px 0', fontSize: isMobile ? '28px' : '36px', fontWeight: '800', color: '#0F172A', letterSpacing: '-0.5px' }}>
@@ -205,7 +177,7 @@ export default function Dashboard({ setSelectedLevel, isMobile, isDesktop }) {
           </p>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: `repeat(auto-fit, minmax(${isMobile ? '100%' : '220px'}, 1fr))`, gap: '24px', marginBottom: '48px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px', marginBottom: isMobile ? '32px' : '48px' }}>
           <div style={{ backgroundColor: '#FFFFFF', borderRadius: '16px', padding: '24px', display: 'flex', alignItems: 'center', gap: '20px', border: '1px solid #E2E8F0', boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.05)' }}>
             <div style={{ width: '56px', height: '56px', borderRadius: '50%', backgroundColor: '#0F172A', color: '#FFFFFF', display: 'flex', justifyContent: 'center', alignItems: 'center', flexShrink: 0 }}><IconUsers /></div>
             <div>
@@ -234,10 +206,10 @@ export default function Dashboard({ setSelectedLevel, isMobile, isDesktop }) {
         {/** Tab Selection and Feature Controls */}
         <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', justifyContent: 'space-between', alignItems: isMobile ? 'stretch' : 'center', gap: '16px', marginBottom: '32px' }}>
           
-          <div style={{ display: 'flex', backgroundColor: '#F1F5F9', borderRadius: '999px', padding: '6px', border: '1px solid #E2E8F0', width: 'fit-content' }}>
+          <div style={{ display: 'flex', backgroundColor: '#F1F5F9', borderRadius: '999px', padding: '6px', border: '1px solid #E2E8F0', width: isMobile ? '100%' : 'fit-content' }}>
             <button 
               onClick={() => setActiveTab('tugas_berjalan')}
-              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '8px 24px', borderRadius: '999px', border: 'none', fontSize: '14px', fontWeight: '500', cursor: 'pointer', transition: '0.2s', backgroundColor: activeTab === 'tugas_berjalan' ? '#0F172A' : 'transparent', color: activeTab === 'tugas_berjalan' ? '#FFFFFF' : '#64748B' }}
+              style={{ flex: isMobile ? '1 1 0%' : 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '8px 24px', borderRadius: '999px', border: 'none', fontSize: '14px', fontWeight: '500', cursor: 'pointer', transition: '0.2s', backgroundColor: activeTab === 'tugas_berjalan' ? '#0F172A' : 'transparent', color: activeTab === 'tugas_berjalan' ? '#FFFFFF' : '#64748B' }}
             >
               Tugas Berjalan 
               {activeTab === 'tugas_berjalan' && (
@@ -248,27 +220,25 @@ export default function Dashboard({ setSelectedLevel, isMobile, isDesktop }) {
             </button>
             <button 
               onClick={() => setActiveTab('riwayat')}
-              style={{ padding: '8px 24px', borderRadius: '999px', border: 'none', fontSize: '14px', fontWeight: '500', cursor: 'pointer', transition: '0.2s', backgroundColor: activeTab === 'riwayat' ? '#0F172A' : 'transparent', color: activeTab === 'riwayat' ? '#FFFFFF' : '#64748B' }}
+              style={{ flex: isMobile ? '1 1 0%' : 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '8px 24px', borderRadius: '999px', border: 'none', fontSize: '14px', fontWeight: '500', cursor: 'pointer', transition: '0.2s', backgroundColor: activeTab === 'riwayat' ? '#0F172A' : 'transparent', color: activeTab === 'riwayat' ? '#FFFFFF' : '#64748B' }}
             >
               Riwayat Modul
             </button>
           </div>
 
-          <div style={{ display: 'flex', gap: '12px', justifyContent: isMobile ? 'space-between' : 'flex-end', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: '12px', justifyContent: isMobile ? 'space-between' : 'flex-end', flexWrap: 'wrap', width: isMobile ? '100%' : 'auto' }}>
             
-            {/** View Mode Toggle */}
-            <div style={{ display: 'flex', backgroundColor: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: '10px', padding: '4px' }}>
-              <button onClick={() => setViewMode('grid')} style={{ padding: '8px', borderRadius: '6px', border: 'none', backgroundColor: viewMode === 'grid' ? '#0F172A' : 'transparent', color: viewMode === 'grid' ? '#FFFFFF' : '#94A3B8', cursor: 'pointer', display: 'flex', transition: '0.2s' }}><IconGrid /></button>
-              <button onClick={() => setViewMode('list')} style={{ padding: '8px', borderRadius: '6px', border: 'none', backgroundColor: viewMode === 'list' ? '#0F172A' : 'transparent', color: viewMode === 'list' ? '#FFFFFF' : '#94A3B8', cursor: 'pointer', display: 'flex', transition: '0.2s' }}><IconList /></button>
+            <div style={{ display: 'flex', flex: isMobile ? '1 1 0%' : 'none', justifyContent: 'center', backgroundColor: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: '10px', padding: '4px' }}>
+              <button onClick={() => setViewMode('grid')} style={{ flex: '1 1 0%', padding: '8px', borderRadius: '6px', border: 'none', backgroundColor: viewMode === 'grid' ? '#0F172A' : 'transparent', color: viewMode === 'grid' ? '#FFFFFF' : '#94A3B8', cursor: 'pointer', display: 'flex', justifyContent: 'center', transition: '0.2s' }}><IconGrid /></button>
+              <button onClick={() => setViewMode('list')} style={{ flex: '1 1 0%', padding: '8px', borderRadius: '6px', border: 'none', backgroundColor: viewMode === 'list' ? '#0F172A' : 'transparent', color: viewMode === 'list' ? '#FFFFFF' : '#94A3B8', cursor: 'pointer', display: 'flex', justifyContent: 'center', transition: '0.2s' }}><IconList /></button>
             </div>
             
-            {/** Filter Button Dropdown */}
-            <div ref={filterRef} style={{ position: 'relative' }}>
-              <button onClick={() => { setIsFilterOpen(!isFilterOpen); setIsSortOpen(false); }} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '0 16px', height: '42px', backgroundColor: isFilterOpen ? '#F1F5F9' : '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: '10px', fontSize: '14px', fontWeight: '500', color: '#0F172A', cursor: 'pointer', transition: '0.2s' }}>
+            <div ref={filterRef} style={{ position: 'relative', flex: isMobile ? '1 1 0%' : 'none' }}>
+              <button onClick={() => { setIsFilterOpen(!isFilterOpen); setIsSortOpen(false); }} style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '0 16px', height: '42px', backgroundColor: isFilterOpen ? '#F1F5F9' : '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: '10px', fontSize: '14px', fontWeight: '500', color: '#0F172A', cursor: 'pointer', transition: '0.2s' }}>
                 <IconFilter /> {filterType === 'Semua' ? 'Filter' : filterType.replace('Modul ', '')}
               </button>
               {isFilterOpen && (
-                <div style={{ position: 'absolute', top: '100%', right: 0, marginTop: '8px', backgroundColor: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: '12px', padding: '8px', zIndex: 10, width: '180px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', animation: 'fadeIn 0.2s' }}>
+                <div style={{ position: 'absolute', top: '100%', right: 0, marginTop: '8px', backgroundColor: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: '12px', padding: '8px', zIndex: 10, width: isMobile ? '100%' : '180px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', animation: 'fadeIn 0.2s' }}>
                   <div style={{ padding: '4px 12px', fontSize: '11px', fontWeight: '800', color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px' }}>Pilih Kategori</div>
                   {['Semua', 'Modul Dasar', 'Modul Menengah'].map(opt => (
                     <div key={opt} onClick={() => { setFilterType(opt); setIsFilterOpen(false); }} style={{ padding: '10px 12px', cursor: 'pointer', borderRadius: '8px', fontSize: '13px', fontWeight: '600', backgroundColor: filterType === opt ? '#F8FAFC' : 'transparent', color: filterType === opt ? '#0F172A' : '#475569', transition: '0.2s' }} onMouseOver={e => e.currentTarget.style.backgroundColor = '#F1F5F9'} onMouseOut={e => e.currentTarget.style.backgroundColor = filterType === opt ? '#F8FAFC' : 'transparent'}>
@@ -279,13 +249,12 @@ export default function Dashboard({ setSelectedLevel, isMobile, isDesktop }) {
               )}
             </div>
 
-            {/** Sort Button Dropdown */}
-            <div ref={sortRef} style={{ position: 'relative' }}>
-              <button onClick={() => { setIsSortOpen(!isSortOpen); setIsFilterOpen(false); }} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '0 16px', height: '42px', backgroundColor: isSortOpen ? '#F1F5F9' : '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: '10px', fontSize: '14px', fontWeight: '500', color: '#0F172A', cursor: 'pointer', transition: '0.2s' }}>
+            <div ref={sortRef} style={{ position: 'relative', flex: isMobile ? '1 1 0%' : 'none' }}>
+              <button onClick={() => { setIsSortOpen(!isSortOpen); setIsFilterOpen(false); }} style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '0 16px', height: '42px', backgroundColor: isSortOpen ? '#F1F5F9' : '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: '10px', fontSize: '14px', fontWeight: '500', color: '#0F172A', cursor: 'pointer', transition: '0.2s' }}>
                 <IconSort /> {sortOrder === 'terbaru' ? 'Urutkan' : sortOrder === 'a-z' ? 'A - Z' : 'Z - A'}
               </button>
               {isSortOpen && (
-                <div style={{ position: 'absolute', top: '100%', right: 0, marginTop: '8px', backgroundColor: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: '12px', padding: '8px', zIndex: 10, width: '180px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', animation: 'fadeIn 0.2s' }}>
+                <div style={{ position: 'absolute', top: '100%', right: 0, marginTop: '8px', backgroundColor: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: '12px', padding: '8px', zIndex: 10, width: isMobile ? '100%' : '180px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', animation: 'fadeIn 0.2s' }}>
                   <div style={{ padding: '4px 12px', fontSize: '11px', fontWeight: '800', color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px' }}>Metode Urutan</div>
                   {[ {val: 'terbaru', label: 'Terbaru Ditambahkan'}, {val: 'a-z', label: 'Abjad A - Z'}, {val: 'z-a', label: 'Abjad Z - A'} ].map(opt => (
                     <div key={opt.val} onClick={() => { setSortOrder(opt.val); setIsSortOpen(false); }} style={{ padding: '10px 12px', cursor: 'pointer', borderRadius: '8px', fontSize: '13px', fontWeight: '600', backgroundColor: sortOrder === opt.val ? '#F8FAFC' : 'transparent', color: sortOrder === opt.val ? '#0F172A' : '#475569', transition: '0.2s' }} onMouseOver={e => e.currentTarget.style.backgroundColor = '#F1F5F9'} onMouseOut={e => e.currentTarget.style.backgroundColor = sortOrder === opt.val ? '#F8FAFC' : 'transparent'}>
@@ -299,7 +268,6 @@ export default function Dashboard({ setSelectedLevel, isMobile, isDesktop }) {
           </div>
         </div>
 
-        {/** Modules Display Area respecting Grid and List mode variables */}
         {displayedModules.length > 0 ? (
           <div style={{ 
             display: viewMode === 'grid' ? 'grid' : 'flex', 
@@ -315,7 +283,6 @@ export default function Dashboard({ setSelectedLevel, isMobile, isDesktop }) {
                 boxShadow: '0 2px 4px -1px rgba(0, 0, 0, 0.02)', gap: viewMode === 'list' && !isMobile ? '20px' : '0' 
               }}>
                 
-                {/** Column 1 Icon and Title */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: viewMode === 'list' && !isMobile ? '0' : '20px', flex: viewMode === 'list' && !isMobile ? '0 0 28%' : 'auto', minWidth: 0 }}>
                   <div style={{ width: '56px', height: '56px', borderRadius: '14px', backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0', display: 'flex', justifyContent: 'center', alignItems: 'center', flexShrink: 0 }}>
                     <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#0F172A" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 11V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v0"></path><path d="M14 10V4a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v2"></path><path d="M10 10.5V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v8"></path><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"></path></svg>
@@ -326,21 +293,18 @@ export default function Dashboard({ setSelectedLevel, isMobile, isDesktop }) {
                   </div>
                 </div>
 
-                {/** Column 2 Tags */}
                 <div style={{ display: 'flex', gap: '8px', marginBottom: viewMode === 'list' && !isMobile ? '0' : '16px', flexWrap: 'wrap', flex: viewMode === 'list' && !isMobile ? '0 0 15%' : 'auto' }}>
                   {(mod.tags || ['Pemula', 'Wajib']).map((tag, idx) => (
                     <span key={idx} style={{ padding: '4px 10px', backgroundColor: '#F1F5F9', borderRadius: '6px', fontSize: '12px', fontWeight: '600', color: '#475569', whiteSpace: 'nowrap' }}>{tag}</span>
                   ))}
                 </div>
 
-                {/** Column 3 Description */}
                 <div style={{ margin: viewMode === 'list' && !isMobile ? '0' : '0 0 24px 0', flex: viewMode === 'list' && !isMobile ? '1 1 auto' : 'auto', paddingRight: viewMode === 'list' && !isMobile ? '20px' : '0' }}>
                   <p style={{ margin: 0, fontSize: '13px', fontWeight: '500', color: '#64748B', lineHeight: '1.6', display: '-webkit-box', WebkitLineClamp: viewMode === 'list' && !isMobile ? 2 : 'unset', WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
                     {mod.desc || 'Pantau tingkat akurasi siswa dalam memperagakan gestur tangan ini menggunakan deteksi sensor AI.'}
                   </p>
                 </div>
 
-                {/** Column 4 Actions */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: viewMode === 'grid' && !isMobile ? 'auto' : '0', flex: viewMode === 'list' && !isMobile ? '0 0 15%' : 'auto', justifyContent: viewMode === 'list' && !isMobile ? 'flex-end' : 'flex-start', flexShrink: 0 }}>
                   <button onClick={() => setSelectedLevel(mod.level_key || 'huruf')} style={{ width: '100%', flex: viewMode === 'grid' || isMobile ? 1 : 'none', padding: '12px 16px', backgroundColor: '#0F172A', color: '#FFFFFF', border: 'none', borderRadius: '10px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', transition: '0.2s', textAlign: 'center', whiteSpace: 'nowrap' }}>
                     Tinjau Progres
@@ -369,9 +333,10 @@ export default function Dashboard({ setSelectedLevel, isMobile, isDesktop }) {
         backgroundColor: '#FFFFFF', 
         borderLeft: isDesktop ? '1px solid #E2E8F0' : 'none',
         borderTop: !isDesktop ? '1px solid #E2E8F0' : 'none',
-        padding: '40px 32px',
+        padding: isMobile ? '32px 16px' : '40px 32px',
         boxSizing: 'border-box',
-        overflowY: 'auto'
+        overflowY: isDesktop ? 'auto' : 'visible',
+        flexShrink: 0
       }}>
         
         <h2 style={{ margin: '0 0 16px 0', fontSize: '22px', fontWeight: '800', color: '#0F172A' }}>Jadwal Evaluasi</h2>
@@ -398,10 +363,11 @@ export default function Dashboard({ setSelectedLevel, isMobile, isDesktop }) {
                         cursor: 'pointer',
                         backgroundColor: isActive ? '#0F172A' : 'transparent', 
                         color: isActive ? '#FFFFFF' : '#0F172A', 
-                        padding: '12px 14px', 
+                        padding: isMobile ? '10px 8px' : '12px 14px', 
                         borderRadius: '16px',
                         boxShadow: isActive ? '0 8px 16px -4px rgba(15, 23, 42, 0.3)' : 'none',
-                        transition: 'all 0.2s ease'
+                        transition: 'all 0.2s ease',
+                        flex: isMobile ? '1 1 0%' : 'none'
                     }}
                  >
                     <div style={{ fontSize: '12px', fontWeight: '400', color: isActive ? 'rgba(255,255,255,0.8)' : '#64748B', marginBottom: '4px' }}>{dayName}</div>
@@ -413,18 +379,19 @@ export default function Dashboard({ setSelectedLevel, isMobile, isDesktop }) {
            <button onClick={handleNextDays} style={{ background: 'none', border: 'none', color: '#94A3B8', cursor: 'pointer', padding: '8px', display: 'flex' }}><IconChevronRight /></button>
         </div>
 
-        <div style={{ display: 'flex', gap: '16px', borderBottom: '1px solid #E2E8F0', paddingBottom: '16px', marginBottom: '32px' }}>
-          <button onClick={() => setActiveEvalTab('perlu_dinilai')} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', fontWeight: activeEvalTab === 'perlu_dinilai' ? '600' : '500', color: activeEvalTab === 'perlu_dinilai' ? '#0F172A' : '#94A3B8', cursor: 'pointer', position: 'relative', background: 'none', border: 'none', padding: 0 }}>
-            <IconListTask /> Perlu Dinilai
+        {/* KUNCI PERBAIKAN: Flex '1 1 0%' pada ketiga tab panel samping */}
+        <div style={{ display: 'flex', width: '100%', borderBottom: '1px solid #E2E8F0', paddingBottom: '16px', marginBottom: '32px' }}>
+          <button onClick={() => setActiveEvalTab('perlu_dinilai')} style={{ flex: '1 1 0%', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', fontSize: isMobile ? '13px' : '14px', fontWeight: activeEvalTab === 'perlu_dinilai' ? '600' : '500', color: activeEvalTab === 'perlu_dinilai' ? '#0F172A' : '#94A3B8', cursor: 'pointer', position: 'relative', background: 'none', border: 'none', padding: 0 }}>
+            <IconListTask /> {!isMobile && "Perlu Dinilai"} {isMobile && "Tertunda"}
             {activeEvalTab === 'perlu_dinilai' && <div style={{ position: 'absolute', bottom: '-17px', left: 0, width: '100%', height: '3px', backgroundColor: '#0F172A', borderRadius: '3px 3px 0 0' }}></div>}
           </button>
           
-          <button onClick={() => setActiveEvalTab('berjalan')} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', fontWeight: activeEvalTab === 'berjalan' ? '600' : '500', color: activeEvalTab === 'berjalan' ? '#0F172A' : '#94A3B8', cursor: 'pointer', position: 'relative', background: 'none', border: 'none', padding: 0 }}>
+          <button onClick={() => setActiveEvalTab('berjalan')} style={{ flex: '1 1 0%', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', fontSize: isMobile ? '13px' : '14px', fontWeight: activeEvalTab === 'berjalan' ? '600' : '500', color: activeEvalTab === 'berjalan' ? '#0F172A' : '#94A3B8', cursor: 'pointer', position: 'relative', background: 'none', border: 'none', padding: 0 }}>
             <IconProgress /> Berjalan
             {activeEvalTab === 'berjalan' && <div style={{ position: 'absolute', bottom: '-17px', left: 0, width: '100%', height: '3px', backgroundColor: '#0F172A', borderRadius: '3px 3px 0 0' }}></div>}
           </button>
           
-          <button onClick={() => setActiveEvalTab('selesai')} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', fontWeight: activeEvalTab === 'selesai' ? '600' : '500', color: activeEvalTab === 'selesai' ? '#0F172A' : '#94A3B8', cursor: 'pointer', position: 'relative', background: 'none', border: 'none', padding: 0 }}>
+          <button onClick={() => setActiveEvalTab('selesai')} style={{ flex: '1 1 0%', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', fontSize: isMobile ? '13px' : '14px', fontWeight: activeEvalTab === 'selesai' ? '600' : '500', color: activeEvalTab === 'selesai' ? '#0F172A' : '#94A3B8', cursor: 'pointer', position: 'relative', background: 'none', border: 'none', padding: 0 }}>
             <IconCheckEval /> Selesai
             {activeEvalTab === 'selesai' && <div style={{ position: 'absolute', bottom: '-17px', left: 0, width: '100%', height: '3px', backgroundColor: '#0F172A', borderRadius: '3px 3px 0 0' }}></div>}
           </button>
