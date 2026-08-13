@@ -3,14 +3,23 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
 const genAI = apiKey ? new GoogleGenerativeAI(apiKey) : null;
 
+/**
+ * Generates context aware feedback for sign language practice using Google Generative AI
+ * Evaluates the student performance based on target gesture matching and confidence threshold
+ *
+ * @param {boolean} isCorrect Indicates whether the detected gesture matches the target
+ * @param {string} letter The target sign language alphabet or word
+ * @param {number} confidence The AI detection confidence percentage
+ * @returns {Promise<string>} The generated motivational and corrective feedback text
+ */
 export const getFeedbackFromAI = async (isCorrect, letter, confidence) => {
     if (!apiKey) {
-        return "ERROR: API Key tidak terdeteksi. Pastikan file .env ada dan kamu sudah me-restart server (npm run dev).";
+        console.error("Viba AI Integration Error Missing Gemini API Key configuration");
+        return "Sistem AI tidak dapat diakses saat ini Mohon hubungi administrator kelas";
     }
 
     try {
         const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
-        
         let prompt = "";
 
         if (isCorrect && confidence >= 80) {
@@ -37,8 +46,9 @@ export const getFeedbackFromAI = async (isCorrect, letter, confidence) => {
 
         const result = await model.generateContent(prompt);
         return result.response.text();
+        
     } catch (error) {
-        console.error("Error Detail Gemini:", error);
-        return `GAGAL MEMANGGIL AI: ${error.message}`;
+        console.error("Generative AI Execution Error", error);
+        return "Maaf Viba sedang mengalami gangguan pemrosesan data Silakan coba lagi beberapa saat";
     }
 };
