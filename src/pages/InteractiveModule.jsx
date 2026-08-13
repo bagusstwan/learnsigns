@@ -20,8 +20,8 @@ const IconStar = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="#F5
 const IconAlertTriangle = () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#EF4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>;
 const IconCheckCircle = () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#10B981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>;
 
-/** Artificial Intelligence Classification Labels */
 const ALPHABET_LABELS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'];
+const DYNAMIC_LABELS = ['BANYAK PIKIRAN', 'CEMAS', 'KECEWA', 'KELELAHAN', 'LUPA', 'MALAS', 'MANDIRI', 'MARAH', 'PENOLAKAN', 'SEMANGAT', 'SENANG', 'TAKUT'];
 
 export default function InteractiveModule({ selectedLevel, setSelectedLevel }) {
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
@@ -36,7 +36,6 @@ export default function InteractiveModule({ selectedLevel, setSelectedLevel }) {
   const isTablet = windowWidth <= 1024 && windowWidth >= 768;
   const isMobileScreen = windowWidth < 768;
 
-  /** Educator Authorization Verification */
   const userStr = localStorage.getItem('user') || '';
   let isEducator = false;
   const isEducatorRef = useRef(false);
@@ -49,7 +48,6 @@ export default function InteractiveModule({ selectedLevel, setSelectedLevel }) {
   const token = localStorage.getItem('token');
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api/v1';
 
-  /** Core Application State Management */
   const [modules, setModules] = useState([]); 
   const [currentModule, setCurrentModule] = useState(null);
   const [signStatus, setSignStatus] = useState("System Standby");
@@ -60,7 +58,6 @@ export default function InteractiveModule({ selectedLevel, setSelectedLevel }) {
   const [isTutorialModalOpen, setIsTutorialModalOpen] = useState(false);
   const [tfModel, setTfModel] = useState(null);
 
-  /** Specific State Management for Live Class Evaluation */
   const [studentsData, setStudentsData] = useState([]);
   const [isLiveEvalOpen, setIsLiveEvalOpen] = useState(false);
   const [evalSearchQuery, setEvalSearchQuery] = useState("");
@@ -68,35 +65,38 @@ export default function InteractiveModule({ selectedLevel, setSelectedLevel }) {
   const [evalStars, setEvalStars] = useState(10);
   const [isSubmittingEval, setIsSubmittingEval] = useState(false);
 
-  /** Custom Notification Modal State */
   const [statusModal, setStatusModal] = useState({ isOpen: false, title: "", message: "", type: "info" });
 
-  /** Memory References for Neural Network Engine */
   const webcamRef = useRef(null);
   const canvasRef = useRef(null);
   const isAiLocked = useRef(false);
   const pendingStatusRef = useRef("");
   const consecutiveFrameCount = useRef(0);
   const latestConfidenceRef = useRef(0);
-  
   const successFrameCount = useRef(0);
 
-  /** Trigger Custom Alert Modal */
+  const sequenceBufferRef = useRef([]);
+  const isOverlayOpen = useRef(false);
+  const missingHandCount = useRef(0);
+
+  useEffect(() => {
+      isOverlayOpen.current = isTutorialModalOpen || isLiveEvalOpen || statusModal.isOpen;
+  }, [isTutorialModalOpen, isLiveEvalOpen, statusModal.isOpen]);
+
   const showNotification = (title, message, type) => {
     setStatusModal({ isOpen: true, title, message, type });
   };
 
-  /** Module Data Retrieval and Model Initialization */
   useEffect(() => {
     if (selectedLevel) {
-      setAiMessage(`Menyiapkan mesin kecerdasan buatan untuk modul ${selectedLevel}...`);
+      setAiMessage(`Menyiapkan mesin kecerdasan buatan untuk modul ${selectedLevel}`);
       
       const levelParam = selectedLevel === 'huruf' ? 'abjad' : selectedLevel;
       const folderModel = selectedLevel === 'kata' ? 'kosakata' : levelParam;
 
       fetch(`${API_BASE_URL}/modules?level=${levelParam}`)
         .then(res => {
-          if (!res.ok) throw new Error("Terjadi kegagalan koneksi jaringan.");
+          if (!res.ok) throw new Error("Terjadi kegagalan koneksi jaringan");
           return res.json();
         })
         .then(data => {
@@ -104,24 +104,18 @@ export default function InteractiveModule({ selectedLevel, setSelectedLevel }) {
             setModules(data.data);
             setCurrentModule(data.data[0]); 
           } else {
-             setAiMessage("Modul untuk tingkatan ini belum tersedia di basis data.");
+             setAiMessage("Modul untuk tingkatan ini belum tersedia di basis data");
              setModules([]);
              setCurrentModule(null);
           }
         })
         .catch(err => {
           console.error("System Error", err);
-          setAiMessage("Gagal terhubung ke basis data utama.");
+          setAiMessage("Gagal terhubung ke basis data utama");
         });
 
       const loadModel = async () => {
         if (tfModel) tfModel.dispose(); 
-        
-        if (selectedLevel !== 'abjad' && selectedLevel !== 'huruf') {
-           setAiMessage("Fitur evaluasi AI untuk Kosa Kata sedang dinonaktifkan sementara untuk perbaikan.");
-           return;
-        }
-
         try {
           const modelUrl = `http://127.0.0.1:8000/serve-ai/${folderModel}/model.json?v=${new Date().getTime()}`;
           const loadedModel = await tf.loadLayersModel(modelUrl);
@@ -129,7 +123,7 @@ export default function InteractiveModule({ selectedLevel, setSelectedLevel }) {
           setAiMessage(`Mesin AI ${folderModel} aktif. Silakan mulai peragakan gestur.`);
         } catch (error) {
           console.error("Failed loading model", error);
-          setAiMessage(`Kegagalan memuat parameter model untuk ${folderModel}.`);
+          setAiMessage(`Kegagalan memuat parameter model untuk ${folderModel}`);
         }
       };
       loadModel();
@@ -154,26 +148,30 @@ export default function InteractiveModule({ selectedLevel, setSelectedLevel }) {
 
   useEffect(() => {
     if (currentModule) {
-      setSignStatus("System Standby");
+      setSignStatus("Menunggu input visual tangan...");
       setAiMessage(`Modul Terpilih: ${currentModule.title}. Menunggu input visual...`);
       isAiLocked.current = false;
       pendingStatusRef.current = "";
       consecutiveFrameCount.current = 0;
       successFrameCount.current = 0;
       latestConfidenceRef.current = 0;
+      sequenceBufferRef.current = [];
+      missingHandCount.current = 0;
       setIsTutorialModalOpen(true);
     }
   }, [currentModule]);
 
-  /** Core Visual Processing Engine */
   useEffect(() => {
     if (!selectedLevel || !currentModule) return;
-    if (isTutorialModalOpen || isLiveEvalOpen || statusModal.isOpen) return;
+    
+    let isRunning = true; 
     
     const hands = new Hands({ locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}` });
     hands.setOptions({ maxNumHands: 2, modelComplexity: 1, minDetectionConfidence: 0.8, minTrackingConfidence: 0.85 });
 
     hands.onResults((results) => {
+      if (!isRunning) return; 
+
       if (!canvasRef.current || !webcamRef.current) return;
       const videoWidth = webcamRef.current.video.videoWidth;
       const videoHeight = webcamRef.current.video.videoHeight;
@@ -186,17 +184,18 @@ export default function InteractiveModule({ selectedLevel, setSelectedLevel }) {
       canvasCtx.scale(-1, 1);
       canvasCtx.translate(-videoWidth, 0);
 
-      let baseStatus = "No Detection";
-      let displayPercentage = 0;
-      let detectedLabel = "Blank";
-      
-      if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
-        let flattened = [];
+      const isDynamicMode = selectedLevel !== 'abjad' && selectedLevel !== 'huruf';
+      let extractedFrame = new Array(126).fill(0.0);
+      let isHandPresent = false;
 
+      if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
+        isHandPresent = true;
+        missingHandCount.current = 0; 
+        
+        let flattened = [];
         for (const landmarks of results.multiHandLandmarks) {
           drawConnectors(canvasCtx, landmarks, HAND_CONNECTIONS, { color: '#0F172A', lineWidth: 2 });
           drawLandmarks(canvasCtx, landmarks, { color: '#FFFFFF', lineWidth: 1, radius: 2 });
-          
           for (const point of landmarks) {
             flattened.push(point.x, point.y, point.z);
           }
@@ -205,114 +204,205 @@ export default function InteractiveModule({ selectedLevel, setSelectedLevel }) {
         while (flattened.length < 126) {
           flattened.push(0.0, 0.0, 0.0);
         }
-        
-        const extractedFrame = flattened.slice(0, 126);
+        extractedFrame = flattened.slice(0, 126);
+      } else {
+        missingHandCount.current += 1;
+      }
 
-        if ((selectedLevel === 'abjad' || selectedLevel === 'huruf') && tfModel) {
+      if (isOverlayOpen.current) {
+          setSignStatus("Sensor Siaga (Menunggu Konfirmasi)");
+          canvasCtx.restore();
+          return;
+      }
+
+      /** MANAJEMEN BUFFER CERDAS ANTI-HALUSINASI */
+      if (isDynamicMode) {
+          if (isHandPresent) {
+              sequenceBufferRef.current.push(extractedFrame);
+          } else if (!isHandPresent && sequenceBufferRef.current.length > 0 && missingHandCount.current < 15) {
+              // KUNCI PERBAIKAN 1: Gunakan Frame Terakhir (Freeze Position), BUKAN NOL!
+              const lastFrame = sequenceBufferRef.current[sequenceBufferRef.current.length - 1];
+              sequenceBufferRef.current.push(lastFrame);
+          } else if (missingHandCount.current >= 15) {
+              // Tangan hilang total, buang semua memori
+              sequenceBufferRef.current = [];
+              successFrameCount.current = 0;
+              consecutiveFrameCount.current = 0;
+          }
+
+          if (sequenceBufferRef.current.length > 60) {
+              sequenceBufferRef.current.shift();
+          }
+      }
+
+      /** LOGIKA PREDIKSI AI */
+      // KUNCI PERBAIKAN 2: Jangan tebak jika tangan hilang lebih dari 5 frame
+      let shouldPredictDynamic = isDynamicMode && sequenceBufferRef.current.length === 60 && missingHandCount.current <= 5;
+      let shouldPredictStatic = !isDynamicMode && isHandPresent;
+
+      if (tfModel && (shouldPredictStatic || shouldPredictDynamic)) {
+           let displayPercentage = 0;
+           let detectedLabel = "Blank";
+
            try {
-             tf.tidy(() => {
-               const inputTensor = tf.tensor2d([extractedFrame]);
-               const prediction = tfModel.predict(inputTensor);
-               const maxIndex = prediction.argMax(-1).dataSync()[0];
-               const maxConfidence = prediction.max().dataSync()[0];
-               
-               displayPercentage = Math.round(maxConfidence * 100);
-               if (displayPercentage > 35) { 
-                  detectedLabel = ALPHABET_LABELS[maxIndex];
-               }
-             });
+             if (!isDynamicMode) {
+                 tf.tidy(() => {
+                   const inputTensor = tf.tensor2d([extractedFrame]);
+                   const prediction = tfModel.predict(inputTensor);
+                   const maxIndex = prediction.argMax(-1).dataSync()[0];
+                   displayPercentage = Math.round(prediction.max().dataSync()[0] * 100);
+                   detectedLabel = ALPHABET_LABELS[maxIndex];
+                 });
+             } else {
+                 tf.tidy(() => {
+                   const inputTensor = tf.tensor3d([sequenceBufferRef.current]);
+                   const prediction = tfModel.predict(inputTensor);
+                   const maxIndex = prediction.argMax(-1).dataSync()[0];
+                   displayPercentage = Math.round(prediction.max().dataSync()[0] * 100);
+                   detectedLabel = DYNAMIC_LABELS[maxIndex];
+                 });
+             }
            } catch (e) { 
              console.error("Tensor Error", e); 
            }
            
            const isCorrect = (currentModule && detectedLabel === currentModule.target_gesture);
-           baseStatus = isCorrect ? `Valid: ${currentModule?.target_gesture}` : `Terdeteksi: ${detectedLabel}`;
+           let baseStatus = isCorrect 
+                ? `Mendeteksi ${currentModule?.target_gesture}` 
+                : `Menganalisis kecocokan gestur...`;
 
-           if (isCorrect && displayPercentage >= 90) {
-              successFrameCount.current += 1;
-              
-              if (successFrameCount.current >= 15) {
-                 if (!isAiLocked.current) {
-                    isAiLocked.current = true;
-                    latestConfidenceRef.current = displayPercentage;
-                    setSignStatus(`${baseStatus} (${displayPercentage}%)`);
-                    executeSuccessAction(displayPercentage);
-                 }
-              } else {
-                 setSignStatus(`Tahan Posisi Belajar ${successFrameCount.current}/15 (${displayPercentage}%)`);
-              }
+           // Setting threshold and required frames based on mode
+           const confidenceThreshold = isDynamicMode ? 50 : 80;
+          const requiredFrames = isDynamicMode ? 8 : 15;
+
+           if (isCorrect && displayPercentage >= confidenceThreshold) {
+             successFrameCount.current += 1;
+             
+             if (successFrameCount.current >= requiredFrames) {
+                if (!isAiLocked.current) {
+                   isAiLocked.current = true;
+                   latestConfidenceRef.current = displayPercentage;
+                   setSignStatus(`${baseStatus} ${displayPercentage} Persen`);
+                   executeGradedEvaluation(displayPercentage);
+                }
+             } else {
+                setSignStatus(`Memvalidasi Posisi ${successFrameCount.current} dari ${requiredFrames} (${displayPercentage}%)`);
+             }
            } else {
-              successFrameCount.current = 0;
-              
-              if (baseStatus === pendingStatusRef.current) {
-                 consecutiveFrameCount.current += 1;
-              } else {
-                 pendingStatusRef.current = baseStatus;
-                 consecutiveFrameCount.current = 1;
-              }
+             successFrameCount.current = 0;
+             
+             if (baseStatus === pendingStatusRef.current) {
+                consecutiveFrameCount.current += 1;
+             } else {
+                pendingStatusRef.current = baseStatus;
+                consecutiveFrameCount.current = 1;
+             }
 
-              if (consecutiveFrameCount.current >= 30 && !isCorrect && displayPercentage > 40) {
-                 if (!isAiLocked.current) {
-                    isAiLocked.current = true;
-                    latestConfidenceRef.current = displayPercentage;
-                    executeErrorAnalysis(detectedLabel, displayPercentage);
-                 }
-              }
-              if (consecutiveFrameCount.current >= 3) {
-                 setSignStatus(displayPercentage > 0 ? `${baseStatus} (${displayPercentage}%)` : baseStatus);
-              }
+             if (consecutiveFrameCount.current >= 30 && displayPercentage > 40) {
+                if (!isAiLocked.current) {
+                   isAiLocked.current = true;
+                   latestConfidenceRef.current = displayPercentage;
+                   executeErrorAnalysis(detectedLabel, displayPercentage);
+                }
+             }
+             
+             if (consecutiveFrameCount.current >= 3) {
+                setSignStatus(`${baseStatus} (${displayPercentage}%)`);
+             }
            }
-
-        } else {
-           setSignStatus("Fitur Dinonaktifkan Sementara");
-        }
-
       } else {
-         pendingStatusRef.current = "No Detection";
-         consecutiveFrameCount.current = 0;
-         successFrameCount.current = 0;
+          if (isDynamicMode) {
+              if (sequenceBufferRef.current.length > 0 && sequenceBufferRef.current.length < 60) {
+                  setSignStatus(`Mengumpulkan Matriks Gerakan ${sequenceBufferRef.current.length} dari 60`);
+              } else if (missingHandCount.current > 5) {
+                  setSignStatus("Kehilangan Jejak Sensor (Tangan Tidak Terlihat)");
+              }
+          } else {
+              setSignStatus("Menunggu input visual tangan...");
+          }
       }
+      
       canvasCtx.restore(); 
     });
 
     let cameraInstance = null;
     if (typeof webcamRef.current !== "undefined" && webcamRef.current !== null) {
       cameraInstance = new Camera(webcamRef.current.video, {
-        onFrame: async () => { await hands.send({ image: webcamRef.current.video }); },
+        onFrame: async () => { 
+            if (isRunning && webcamRef.current && webcamRef.current.video) {
+                try {
+                    await hands.send({ image: webcamRef.current.video }); 
+                } catch (err) {}
+            }
+        },
         width: 640, height: 480
       });
       cameraInstance.start();
     }
-    return () => { if (cameraInstance) cameraInstance.stop(); hands.close(); };
     
-  }, [currentModule, selectedLevel, tfModel, isTutorialModalOpen, isLiveEvalOpen, statusModal.isOpen]); 
+    return () => { 
+        isRunning = false; 
+        if (cameraInstance) cameraInstance.stop(); 
+        try { hands.close(); } catch(e) {}
+    };
+    
+  }, [currentModule, selectedLevel, tfModel]); 
 
-  const executeSuccessAction = (confidence) => {
+  const executeGradedEvaluation = (confidence) => {
     setIsLoading(true);
-    const perfectMessage = `Sempurna! Gestur ${currentModule?.target_gesture} anda sangat akurat.`;
-    setAiMessage(perfectMessage);
-    speakText(perfectMessage, () => setIsSpeaking(true), () => setIsSpeaking(false));
-    
-    if (isEducatorRef.current) {
-       setTimeout(() => {
-         setIsLoading(false);
-         setIsLiveEvalOpen(true);
-       }, 500);
+    let message = "";
+    let isPass = false;
+
+    if (confidence >= 80) {
+        message = `Sangat bagus dan sempurna! Gestur ${currentModule?.target_gesture} Anda terdeteksi dengan akurasi ${confidence} persen.`;
+        setSignStatus(`Lulus Sempurna (${confidence}%)`);
+        isPass = true;
+    } else if (confidence >= 45 && confidence < 80) {
+        message = `Sudah bagus! Gestur ${currentModule?.target_gesture} Anda terdeteksi dengan akurasi ${confidence} persen.`;
+        setSignStatus(`Lulus Memuaskan (${confidence}%)`);
+        isPass = true;
     } else {
-       savePersonalProgress(confidence);
+        message = `Akurasi Anda ${confidence} persen. Anda harus lebih belajar lagi untuk gestur ${currentModule?.target_gesture}.`;
+        setSignStatus(`Gagal Memenuhi Target (${confidence}%)`);
+        isPass = false; 
+    }
+    
+    setAiMessage(message);
+    speakText(message, () => setIsSpeaking(true), () => setIsSpeaking(false));
+    
+    if (!isPass) {
+        setTimeout(() => {
+            setIsLoading(false);
+            isAiLocked.current = false;
+            setSignStatus("Silakan ulangi gerakan...");
+            sequenceBufferRef.current = [];
+        }, 4000);
+    } else {
+        if (isEducatorRef.current) {
+           setTimeout(() => {
+             setIsLoading(false);
+             setIsLiveEvalOpen(true);
+           }, 1500);
+        } else {
+           savePersonalProgress(confidence);
+        }
     }
   };
 
   const executeErrorAnalysis = async (detectedLabel, confidence) => {
     setIsLoading(true);
-    setAiMessage("Menganalisis perbaikan gerakan");
+    setAiMessage("Menganalisis perbaikan gerakan...");
     const reply = await getFeedbackFromAI(false, currentModule.target_gesture, confidence);
     
     setAiMessage(reply);
     setIsLoading(false);
     speakText(reply, () => setIsSpeaking(true), () => setIsSpeaking(false));
     
-    setTimeout(() => { isAiLocked.current = false; }, 3000);
+    setTimeout(() => { 
+        isAiLocked.current = false; 
+        sequenceBufferRef.current = [];
+        setSignStatus("System Standby");
+    }, 3500);
   };
 
   const executeNextModuleTransition = () => {
@@ -340,11 +430,10 @@ export default function InteractiveModule({ selectedLevel, setSelectedLevel }) {
     .catch(err => { console.error('Data logging issue', err); setIsLoading(false); executeNextModuleTransition(); });
   };
 
-  /** Handles Live Evaluation Data Submission */
   const handleLiveEvaluationSubmit = async (e) => {
     e.preventDefault();
     if (!evalSelectedStudent || evalStars < 1) {
-       showNotification("Data Tidak Lengkap", "Harap lengkapi target murid dan jumlah bintang evaluasi sebelum menyimpan.", "warning");
+       showNotification("Data Tidak Lengkap", "Harap lengkapi target murid dan jumlah bintang evaluasi sebelum menyimpan", "warning");
        return;
     }
     
@@ -368,12 +457,11 @@ export default function InteractiveModule({ selectedLevel, setSelectedLevel }) {
       const responseText = await response.text(); 
       let responseData;
       
-      /** Safe JSON Parsing to prevent crash on 500 HTML response */
       try {
           responseData = JSON.parse(responseText);
       } catch (parseError) {
           console.error("Peladen merespons dengan HTML Format Tidak Valid", responseText);
-          showNotification("Kesalahan Peladen Server", "Peladen utama menolak permintaan. Silakan periksa Terminal Laravel Anda untuk melihat detail eror.", "error");
+          showNotification("Kesalahan Peladen Server", "Peladen utama menolak permintaan. Silakan periksa Terminal Laravel Anda", "error");
           setIsSubmittingEval(false);
           isAiLocked.current = false;
           return;
@@ -384,14 +472,14 @@ export default function InteractiveModule({ selectedLevel, setSelectedLevel }) {
         setEvalSelectedStudent(null); 
         setEvalSearchQuery(""); 
         setEvalStars(10); 
-        showNotification("Evaluasi Berhasil", "Hasil praktikum murid berhasil direkam ke dalam sistem peladen.", "success");
+        showNotification("Evaluasi Berhasil", "Hasil praktikum murid berhasil direkam ke dalam sistem peladen", "success");
         executeNextModuleTransition();
       } else {
-        showNotification("Gagal Menyimpan", responseData.message || "Pencatatan kelas gagal dieksekusi oleh peladen.", "error");
+        showNotification("Gagal Menyimpan", responseData.message || "Pencatatan kelas gagal dieksekusi oleh peladen", "error");
       }
     } catch (error) {
       console.error("Fetch Network Error", error);
-      showNotification("Koneksi Terputus", `Gagal menghubungi peladen Pesan Sistem ${error.message}`, "error");
+      showNotification("Koneksi Terputus", `Gagal menghubungi peladen. Pesan Sistem: ${error.message}`, "error");
     } finally {
       setIsSubmittingEval(false); 
       isAiLocked.current = false;
@@ -404,8 +492,8 @@ export default function InteractiveModule({ selectedLevel, setSelectedLevel }) {
 
   const inputStyleEnterprise = { width: '100%', padding: '14px 16px 14px 44px', borderRadius: '12px', border: '1px solid #E2E8F0', fontSize: '14px', outline: 'none', transition: 'all 0.2s ease', backgroundColor: '#FFFFFF', color: '#0F172A' };
 
-  const isSignValid = signStatus.includes("Valid") || signStatus.includes("Tahan Posisi");
-  const isSignDetected = signStatus.includes("Terdeteksi");
+  const isSignValid = signStatus.includes("Lulus") || signStatus.includes("Valid") || signStatus.includes("Memvalidasi Posisi") || signStatus.includes("Mengumpulkan");
+  const isSignDetected = signStatus.includes("Terdeteksi") || signStatus.includes("Gagal");
   const statusColor = isSignValid ? '#10B981' : (isSignDetected ? '#F59E0B' : '#64748B');
 
   return (
@@ -413,7 +501,6 @@ export default function InteractiveModule({ selectedLevel, setSelectedLevel }) {
       
       <div style={{ padding: isDesktop ? '40px 48px' : isTablet ? '32px 32px' : '24px 16px', maxWidth: '1400px', margin: '0 auto', width: '100%', boxSizing: 'border-box', position: 'relative' }}>
         
-        {/** Enterprise UI Header */}
         <div style={{ display: 'flex', flexDirection: isMobileScreen ? 'column' : 'row', justifyContent: 'space-between', alignItems: isMobileScreen ? 'flex-start' : 'flex-end', gap: '20px', marginBottom: '32px' }}>
           <div>
             <span 
@@ -422,7 +509,7 @@ export default function InteractiveModule({ selectedLevel, setSelectedLevel }) {
               onMouseOver={e => e.currentTarget.style.color = '#0F172A'}
               onMouseOut={e => e.currentTarget.style.color = '#64748B'}
             >
-              <IconBack /> Ruang Evaluasi Visual
+              
             </span>
             <h1 style={{ margin: '0 0 8px 0', fontSize: isMobileScreen ? '28px' : '36px', fontWeight: '800', color: '#0F172A', letterSpacing: '-0.5px' }}>
               Sesi Penilaian Tingkat {selectedLevel === 'abjad' ? 'Abjad' : selectedLevel === 'kata' ? 'Kosa Kata' : 'Kalimat'}
@@ -442,10 +529,8 @@ export default function InteractiveModule({ selectedLevel, setSelectedLevel }) {
           </button>
         </div>
         
-        {/** Dual Column Layout */}
         <div style={{ display: 'grid', gridTemplateColumns: isDesktop ? '1.2fr 450px' : '1fr', gap: '32px', alignItems: 'flex-start', width: '100%', boxSizing: 'border-box' }}>
           
-          {/** Left Column Camera Feed */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', width: '100%', minWidth: 0, boxSizing: 'border-box' }}>
             
             <div style={{ position: 'relative', width: '100%', aspectRatio: '4/3', borderRadius: '24px', overflow: 'hidden', backgroundColor: '#000000', border: '1px solid #E2E8F0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
@@ -454,10 +539,9 @@ export default function InteractiveModule({ selectedLevel, setSelectedLevel }) {
                 Umpan Video Sensor Aktif
               </div>
 
-              {signStatus.includes("Tahan") && (
+              {signStatus.includes("Memvalidasi") && (
                  <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: 15, backgroundColor: 'rgba(16, 185, 129, 0.8)', padding: '16px 24px', borderRadius: '16px', color: '#FFFFFF', fontSize: '20px', fontWeight: '800', textAlign: 'center', backdropFilter: 'blur(4px)', boxShadow: '0 10px 15px rgba(0,0,0,0.2)' }}>
                     TAHAN POSISI ANDA<br/>
-                    <span style={{ fontSize: '14px', fontWeight: '500' }}>{signStatus.split(" ")[3]}</span>
                  </div>
               )}
 
@@ -479,13 +563,12 @@ export default function InteractiveModule({ selectedLevel, setSelectedLevel }) {
             <GestureReferenceCard currentModule={currentModule} onOpenTutorial={() => setIsTutorialModalOpen(true)} />
           </div>
           
-          {/** Right Column AI Analytics */}
           <div style={{ backgroundColor: '#FFFFFF', borderRadius: '24px', padding: '32px', border: '1px solid #E2E8F0', display: 'flex', flexDirection: 'column', minHeight: '560px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.02)' }}>
             
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '32px' }}>
                <div style={{ width: '12px', height: '12px', borderRadius: '50%', backgroundColor: statusColor, boxShadow: `0 0 8px ${statusColor}` }}></div>
                <span style={{ fontSize: '15px', fontWeight: '700', color: '#0F172A' }}>
-                  {signStatus !== "System Standby" ? signStatus : 'Sensor Standby'}
+                  {signStatus}
                </span>
             </div>
             
@@ -500,7 +583,6 @@ export default function InteractiveModule({ selectedLevel, setSelectedLevel }) {
       <ModuleDrawer isOpen={isDrawerOpen} onClose={() => setIsDrawerOpen(false)} modules={modules} currentModule={currentModule} onSelectModule={(mod) => { setCurrentModule(mod); setIsDrawerOpen(false); }} isMobileScreen={isMobileScreen} />
       <TutorialModal isOpen={isTutorialModalOpen} onClose={() => setIsTutorialModalOpen(false)} module={currentModule} />
 
-      {/** Educator Evaluation Form Modal */}
       {isLiveEvalOpen && (
         <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(15, 23, 42, 0.6)', backdropFilter: 'blur(4px)', zIndex: 99999, display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '16px', animation: 'fadeIn 0.2s ease-out' }}>
           <div style={{ backgroundColor: '#FFFFFF', width: '100%', maxWidth: '480px', borderRadius: '24px', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)', overflow: 'hidden', animation: 'scaleUp 0.2s ease-out' }}>
@@ -509,7 +591,7 @@ export default function InteractiveModule({ selectedLevel, setSelectedLevel }) {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                 <div>
                   <h3 style={{ margin: '0 0 6px 0', fontSize: '20px', fontWeight: '800', color: '#0F172A' }}>Evaluasi Praktikum Kelas</h3>
-                  <p style={{ margin: 0, fontSize: '13px', fontWeight: '400', color: '#64748B' }}>Beri nilai murid yang memperagakan gestur <strong style={{ color: '#10B981' }}>{currentModule?.target_gesture}</strong>.</p>
+                  <p style={{ margin: 0, fontSize: '13px', fontWeight: '400', color: '#64748B' }}>Beri nilai murid yang memperagakan gestur <strong style={{ color: '#10B981' }}>{currentModule?.target_gesture}</strong></p>
                 </div>
                 <button onClick={() => { setIsLiveEvalOpen(false); isAiLocked.current = false; }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94A3B8' }}><IconClose /></button>
               </div>
@@ -558,7 +640,6 @@ export default function InteractiveModule({ selectedLevel, setSelectedLevel }) {
         </div>
       )}
 
-      {/** Custom System Notification Modal */}
       {statusModal.isOpen && (
         <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(15, 23, 42, 0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 100000, backdropFilter: 'blur(4px)', animation: 'fadeIn 0.2s' }} onClick={() => setStatusModal({ ...statusModal, isOpen: false })}>
             <div style={{ backgroundColor: '#FFFFFF', width: isMobileScreen ? '90%' : '400px', borderRadius: '24px', padding: '32px', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)', position: 'relative', animation: 'scaleUp 0.2s', textAlign: 'center' }} onClick={e => e.stopPropagation()}>
