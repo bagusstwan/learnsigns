@@ -87,8 +87,8 @@ const DashboardLayout = () => {
               <IconMenu />
             </button>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <h1 style={{ margin: 0, fontSize: '24px', fontWeight: '900', fontStyle: 'italic', color: '#0F172A', letterSpacing: '-1px' }}>
-                V<span style={{ fontStyle: 'normal', fontWeight: '800' }}>IBA.AI</span>
+              <h1 style={{ margin: 0, fontSize: '24px', fontWeight: '900', fontStyle: 'normal', color: '#0F172A', letterSpacing: '-1px' }}>
+                V<span style={{ fontStyle: 'normal', fontWeight: '800' }}>iba.ai</span>
               </h1>
             </div>
           </div>

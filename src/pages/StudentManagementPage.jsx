@@ -27,22 +27,30 @@ export default function StudentManagementPage() {
   const isMobile = windowWidth < 768;
   const paddingMain = isDesktop ? '40px 64px' : '24px 16px';
 
-  /** State Management Initialization */
+  /**
+   * Application state initialization for data population and loading status
+   */
   const [students, setStudents] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [activeMenuId, setActiveMenuId] = useState(null);
 
-  /** Bulk Selection States */
+  /**
+   * State controllers for bulk selection and mass deletion functionality
+   */
   const [isBulkMode, setIsBulkMode] = useState(false);
   const [selectedUserIds, setSelectedUserIds] = useState([]);
 
-  /** Form Control States */
+  /**
+   * Form validation and modal visibility controllers
+   */
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({ name: '', email: '', password: '' });
   const [editingStudent, setEditingStudent] = useState(null);
 
-  /** Custom Alert and Confirm Modal State */
+  /**
+   * Configuration object for global alert and confirmation dialogs
+   */
   const [dialogConfig, setDialogConfig] = useState({
     isOpen: false,
     title: '',
@@ -51,7 +59,9 @@ export default function StudentManagementPage() {
     onConfirm: null
   });
 
-  /** Pagination Display States */
+  /**
+   * Pagination parameters for table rendering
+   */
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
 
@@ -59,6 +69,9 @@ export default function StudentManagementPage() {
   const token = localStorage.getItem('token');
   const actionMenuRef = useRef(null);
 
+  /**
+   * Event listener to detect outside clicks and close active contextual menus
+   */
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (actionMenuRef.current && !actionMenuRef.current.contains(event.target)) {
@@ -69,6 +82,9 @@ export default function StudentManagementPage() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  /**
+   * Fetch authenticated student data from the backend server
+   */
   const fetchStudents = async () => {
     try {
       const response = await fetch(`${API_BASE_URL}/educator/dashboard`, {
@@ -92,12 +108,15 @@ export default function StudentManagementPage() {
     setDialogConfig({ isOpen: true, title, message, type: 'alert', onConfirm: null });
   };
 
+  /**
+   * Triggers the confirmation dialog for a single student deletion
+   */
   const confirmDeleteStudent = (studentId) => {
     setActiveMenuId(null);
     setDialogConfig({
       isOpen: true,
       title: 'Hapus Akses Murid',
-      message: 'Apakah Anda yakin ingin menghapus hak akses akun murid ini Tindakan ini tidak dapat dibatalkan.',
+      message: 'Apakah Anda yakin ingin menghapus hak akses akun murid ini Tindakan ini tidak dapat dibatalkan',
       type: 'confirm',
       onConfirm: async () => {
         setDialogConfig({ ...dialogConfig, isOpen: false });
@@ -109,20 +128,23 @@ export default function StudentManagementPage() {
           if (response.ok) {
             fetchStudents();
           } else { 
-            setTimeout(() => showAlertDialog('Gagal', 'Gagal menghapus data murid.'), 300);
+            setTimeout(() => showAlertDialog('Gagal', 'Gagal menghapus data murid'), 300);
           }
         } catch (err) { 
-          setTimeout(() => showAlertDialog('Koneksi Error', 'Terjadi kesalahan koneksi server.'), 300);
+          setTimeout(() => showAlertDialog('Koneksi Error', 'Terjadi kesalahan koneksi server'), 300);
         }
       }
     });
   };
 
+  /**
+   * Triggers the confirmation dialog for multiple selected student deletions
+   */
   const confirmBulkDelete = () => {
     setDialogConfig({
       isOpen: true,
       title: 'Hapus Akses Murid',
-      message: `Apakah Anda yakin ingin menghapus hak akses ${selectedUserIds.length} akun murid terpilih Tindakan ini tidak dapat dibatalkan.`,
+      message: `Apakah Anda yakin ingin menghapus hak akses akun murid terpilih Tindakan ini tidak dapat dibatalkan`,
       type: 'confirm',
       onConfirm: async () => {
         setDialogConfig({ ...dialogConfig, isOpen: false });
@@ -137,10 +159,10 @@ export default function StudentManagementPage() {
             setIsBulkMode(false);
             fetchStudents();
           } else { 
-            setTimeout(() => showAlertDialog('Gagal', 'Gagal mengeksekusi penghapusan massal.'), 300);
+            setTimeout(() => showAlertDialog('Gagal', 'Gagal mengeksekusi penghapusan massal'), 300);
           }
         } catch (err) { 
-          setTimeout(() => showAlertDialog('Koneksi Error', 'Terjadi kesalahan sistem server.'), 300);
+          setTimeout(() => showAlertDialog('Koneksi Error', 'Terjadi kesalahan sistem server'), 300);
         }
       }
     });
@@ -162,6 +184,9 @@ export default function StudentManagementPage() {
     }
   };
 
+  /**
+   * Submits student payload to either create a new record or update an existing profile
+   */
   const handleAddOrUpdateStudent = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -180,10 +205,10 @@ export default function StudentManagementPage() {
         setEditingStudent(null);
         fetchStudents();
       } else { 
-        showAlertDialog("Gagal Memproses", "Gagal memproses kredensial murid. Periksa kembali email yang digunakan.");
+        showAlertDialog("Gagal Memproses", "Gagal memproses kredensial murid Periksa kembali surel yang digunakan");
       }
     } catch (err) { 
-      showAlertDialog("Kesalahan Sistem", "Kesalahan koneksi peladen."); 
+      showAlertDialog("Kesalahan Sistem", "Kesalahan koneksi peladen"); 
     } finally { setIsSubmitting(false); }
   };
 
@@ -216,11 +241,11 @@ export default function StudentManagementPage() {
         
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px', flexWrap: 'wrap', gap: '16px' }}>
           <div>
-            <h1 style={{ margin: '0 0 8px 0', fontSize: isMobile ? '32px' : '42px', fontWeight: '800', letterSpacing: '-1px', color: '#0F172A' }}>
+            <h1 style={{ margin: '0 0 8px 0', fontSize: isMobile ? '32px' : '42px', fontWeight: '800', letterSpacing: '0', color: '#0F172A' }}>
               Manajemen Hak Akses Murid
             </h1>
             <p style={{ margin: 0, color: '#475569', fontSize: '15px', maxWidth: '600px', lineHeight: '1.6' }}>
-              Kelola kredensial institusi, modifikasi detail profil, serta atur pembatasan keamanan akun digital siswa Viba.ai.
+              Kelola kredensial institusi modifikasi detail profil serta atur pembatasan keamanan akun digital siswa Viba
             </p>
           </div>
           
@@ -279,55 +304,81 @@ export default function StudentManagementPage() {
                 </tr>
               </thead>
               <tbody>
-                {currentStudents.map((student) => (
-                  <tr key={student.id} style={{ borderBottom: '1px solid #E2E8F0', backgroundColor: selectedUserIds.includes(student.id) ? '#F8FAFC' : 'transparent' }}>
-                    {isBulkMode && (
-                      <td style={{ padding: '16px 24px' }}>
-                        <input 
-                          type="checkbox" 
-                          className="custom-checkbox"
-                          checked={selectedUserIds.includes(student.id)} 
-                          onChange={() => handleSelectCheckbox(student.id)} 
-                        />
-                      </td>
-                    )}
-                    <td style={{ padding: '16px 24px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                        <div style={{ width: '40px', height: '40px', borderRadius: '50%', backgroundColor: '#0F172A', color: '#FFFFFF', display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: '14px', fontWeight: '800' }}>
-                          {student.initials || student.name?.charAt(0).toUpperCase()}
-                        </div>
-                        <div>
-                          <div style={{ fontSize: '15px', fontWeight: '800', color: '#0F172A', marginBottom: '2px' }}>{student.name}</div>
-                          <div style={{ fontSize: '12px', color: '#94A3B8', fontWeight: '400' }}>ID Sistem #{student.id.toString().padStart(4, '0')}</div>
-                        </div>
-                      </div>
-                    </td>
-                    <td style={{ padding: '16px 24px', fontSize: '14px', color: '#0F172A', fontWeight: '500' }}>
-                      {student.class || 'Universitas Pembangunan Panca Budi'}
-                    </td>
-                    <td style={{ padding: '16px 24px' }}>
-                      <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontWeight: '700', color: '#10B981', backgroundColor: '#ECFDF5', padding: '6px 12px', borderRadius: '99px' }}>
-                        <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#10B981' }}></span>
-                        Akses Aktif
-                      </div>
-                    </td>
-                    <td style={{ padding: '16px 24px', textAlign: 'right', position: 'relative' }}>
-                      <button 
-                        onClick={() => setActiveMenuId(activeMenuId === student.id ? null : student.id)}
-                        style={{ padding: '8px 16px', backgroundColor: '#FFFFFF', border: '1px solid #CBD5E1', borderRadius: '99px', fontSize: '13px', fontWeight: '600', color: '#475569', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
-                      >
-                        <IconOptions /> Options
-                      </button>
+                {currentStudents.map((student, index) => {
+                  /**
+                   * Dynamic positioning evaluation to prevent dropdown clipping on the lower boundaries
+                   */
+                  const isNearBottom = index >= currentStudents.length - 2 && currentStudents.length > 2;
 
-                      {activeMenuId === student.id && (
-                        <div ref={actionMenuRef} style={{ position: 'absolute', right: '24px', top: '80%', backgroundColor: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: '12px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', padding: '6px', zIndex: 40, width: '130px', textAlign: 'left', display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                           <div onClick={() => openEditModal(student)} style={{ padding: '10px 12px', borderRadius: '8px', fontSize: '13px', fontWeight: '600', color: '#475569', cursor: 'pointer' }} className="drop-item">Edit Murid</div>
-                           <div onClick={() => confirmDeleteStudent(student.id)} style={{ padding: '10px 12px', borderRadius: '8px', fontSize: '13px', fontWeight: '600', color: '#EF4444', cursor: 'pointer' }} className="drop-item">Hapus Murid</div>
-                        </div>
+                  return (
+                    <tr key={student.id} style={{ borderBottom: '1px solid #E2E8F0', backgroundColor: selectedUserIds.includes(student.id) ? '#F8FAFC' : 'transparent' }}>
+                      {isBulkMode && (
+                        <td style={{ padding: '16px 24px' }}>
+                          <input 
+                            type="checkbox" 
+                            className="custom-checkbox"
+                            checked={selectedUserIds.includes(student.id)} 
+                            onChange={() => handleSelectCheckbox(student.id)} 
+                          />
+                        </td>
                       )}
-                    </td>
-                  </tr>
-                ))}
+                      <td style={{ padding: '16px 24px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                          <div style={{ width: '40px', height: '40px', minWidth: '40px', borderRadius: '50%', backgroundColor: '#0F172A', color: '#FFFFFF', display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: '14px', fontWeight: '800', flexShrink: 0 }}>
+                            {student.initials || student.name?.charAt(0).toUpperCase()}
+                          </div>
+                          <div>
+                            <div style={{ fontSize: '15px', fontWeight: '800', color: '#0F172A', marginBottom: '2px' }}>{student.name}</div>
+                            <div style={{ fontSize: '12px', color: '#94A3B8', fontWeight: '400' }}>ID Sistem #{student.id.toString().padStart(4, '0')}</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td style={{ padding: '16px 24px', fontSize: '14px', color: '#0F172A', fontWeight: '500' }}>
+                        {student.class || 'Universitas Pembangunan Panca Budi'}
+                      </td>
+                      <td style={{ padding: '16px 24px' }}>
+                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontWeight: '700', color: '#10B981', backgroundColor: '#ECFDF5', padding: '6px 12px', borderRadius: '99px', whiteSpace: 'nowrap' }}>
+                          <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#10B981', flexShrink: 0 }}></span>
+                          Akses Aktif
+                        </div>
+                      </td>
+                      <td style={{ padding: '16px 24px', textAlign: 'right', position: 'relative' }}>
+                        <button 
+                          onClick={() => setActiveMenuId(activeMenuId === student.id ? null : student.id)}
+                          style={{ padding: '8px 16px', backgroundColor: '#FFFFFF', border: '1px solid #CBD5E1', borderRadius: '99px', fontSize: '13px', fontWeight: '600', color: '#475569', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                        >
+                          <IconOptions /> Options
+                        </button>
+
+                        {activeMenuId === student.id && (
+                          <div 
+                            ref={actionMenuRef} 
+                            style={{ 
+                              position: 'absolute', 
+                              right: '24px', 
+                              top: isNearBottom ? 'auto' : 'calc(100% + 4px)', 
+                              bottom: isNearBottom ? 'calc(100% + 4px)' : 'auto', 
+                              backgroundColor: '#FFFFFF', 
+                              border: '1px solid #E2E8F0', 
+                              borderRadius: '12px', 
+                              boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', 
+                              padding: '6px', 
+                              zIndex: 40, 
+                              width: '130px', 
+                              textAlign: 'left', 
+                              display: 'flex', 
+                              flexDirection: 'column', 
+                              gap: '2px' 
+                            }}
+                          >
+                             <div onClick={() => openEditModal(student)} style={{ padding: '10px 12px', borderRadius: '8px', fontSize: '13px', fontWeight: '600', color: '#475569', cursor: 'pointer' }} className="drop-item">Edit Murid</div>
+                             <div onClick={() => confirmDeleteStudent(student.id)} style={{ padding: '10px 12px', borderRadius: '8px', fontSize: '13px', fontWeight: '600', color: '#EF4444', cursor: 'pointer' }} className="drop-item">Hapus Murid</div>
+                          </div>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -368,7 +419,7 @@ export default function StudentManagementPage() {
                     {editingStudent ? 'Modifikasi Akses Murid' : 'Buat Akses Murid'}
                   </h3>
                   <p style={{ margin: 0, fontSize: '13px', color: '#64748B', lineHeight: '1.5' }}>
-                    Konfigurasi parameter kredensial resmi. Akun akan terikat langsung di bawah bimbingan Anda.
+                    Konfigurasi parameter kredensial resmi Akun akan terikat langsung di bawah bimbingan Anda
                   </p>
                 </div>
               </div>
