@@ -17,6 +17,7 @@ import StudentManagementPage from './pages/StudentManagementPage';
 /* Impor Komponen Situs Publik Terpadu */
 import PublicLayout from './layouts/PublicLayout';
 import Home from './pages/public/Home/Home';
+import About from './pages/public/About/About';
 import FeaturesPage from './pages/public/Features/FeaturesPage';
 
 /* Impor Modul Autentikasi */
@@ -151,6 +152,7 @@ export default function App() {
         {/* Rute Multi Halaman Publik dengan Konfigurasi Tata Letak Bersarang */}
         <Route element={<PublicLayout />}>
            <Route path="/" element={<Home />} />
+           <Route path="/about" element={<About />} />
            <Route path="/features" element={<FeaturesPage />} />
         </Route>
 
