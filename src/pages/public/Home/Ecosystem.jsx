@@ -48,11 +48,34 @@ export default function Ecosystem() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalContent, setModalContent] = useState(null);
 
+  {/* State dan Referensi Untuk Logika Animasi Scroll Reveal */}
+  const [isVisible, setIsVisible] = useState(false);
+  const ecosystemRef = useRef(null);
+
   {/* Logika Deteksi Ukuran Layar Untuk Responsivitas Tata Letak */}
   useEffect(() => {
     const handleResize = () => setWindowWidth(window.innerWidth);
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  {/* Logika Deteksi Visibilitas Komponen di Layar (Observer) */}
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+          observer.disconnect(); {/* Hentikan pantauan setelah animasi terpicu sekali */}
+        }
+      },
+      { threshold: 0.15 }
+    );
+
+    if (ecosystemRef.current) {
+      observer.observe(ecosystemRef.current);
+    }
+
+    return () => observer.disconnect();
   }, []);
 
   {/* Logika Penguncian Guliran Latar Saat Modal Terbuka */}
@@ -150,19 +173,30 @@ export default function Ecosystem() {
   ];
 
   return (
-    <section style={{
-      backgroundColor: '#FFFFFF',
-      width: '100%',
-      paddingTop: isMobile ? '60px' : '80px',
-      paddingBottom: isMobile ? '80px' : '120px',
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      boxSizing: 'border-box',
-      position: 'relative',
-      overflow: 'hidden' 
-    }}>
+    <section 
+      ref={ecosystemRef}
+      style={{
+        backgroundColor: '#FFFFFF',
+        width: '100%',
+        paddingTop: isMobile ? '60px' : '80px',
+        paddingBottom: isMobile ? '80px' : '120px',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        boxSizing: 'border-box',
+        position: 'relative',
+        overflow: 'hidden' 
+      }}
+    >
       
+      {/* Injeksi Gaya Animasi Global Khusus Komponen Ecosystem */}
+      <style>{`
+        @keyframes slideUpFade {
+          0% { opacity: 0; transform: translateY(50px); }
+          100% { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
+
       {/* Pembungkus Utama Dengan Tata Letak Baris Pada Desktop */}
       <div style={{ 
         maxWidth: '1200px', 
@@ -182,6 +216,7 @@ export default function Ecosystem() {
           width: isMobile ? '100%' : '45%', 
           maxWidth: '550px' 
         }}>
+          {/* Animasi Muncul Pada Judul */}
           <h2 style={{
             fontFamily: '"Gilroy", sans-serif',
             fontSize: isMobile ? '32px' : '40px',
@@ -190,10 +225,14 @@ export default function Ecosystem() {
             lineHeight: '1.2',
             marginTop: '0',
             marginBottom: '20px',
-            letterSpacing: '-1px'
+            letterSpacing: '-1px',
+            opacity: 0,
+            animation: isVisible ? 'slideUpFade 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.1s forwards' : 'none'
           }}>
             Eksplorasi ekosistem pembelajaran yang dirancang untuk pendidik dan kemandirian para siswa.
           </h2>
+          
+          {/* Animasi Muncul Pada Deskripsi */}
           <p style={{
             fontFamily: '"Manrope", sans-serif',
             fontSize: isMobile ? '16px' : '18px',
@@ -201,12 +240,19 @@ export default function Ecosystem() {
             color: '#4B5563',
             lineHeight: '1.6',
             margin: '0 0 40px 0',
+            opacity: 0,
+            animation: isVisible ? 'slideUpFade 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.25s forwards' : 'none'
           }}>
             Platform ini menjembatani komunikasi melalui antarmuka interaktif, pemantauan log aktivitas kelas, dan evaluasi seketika.
           </p>
 
-          {/* Kontrol Navigasi Korsel */}
-          <div style={{ display: 'flex', gap: '16px' }}>
+          {/* Kontrol Navigasi Korsel Dengan Animasi Fade */}
+          <div style={{ 
+            display: 'flex', 
+            gap: '16px',
+            opacity: 0,
+            animation: isVisible ? 'slideUpFade 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.4s forwards' : 'none'
+          }}>
             <button 
               onClick={scrollLeft}
               style={{
@@ -260,8 +306,8 @@ export default function Ecosystem() {
             }
           `}</style>
 
-          {/* Pemetaan Data Kartu Ekosistem */}
-          {ecosystemCards.map((card) => (
+          {/* Pemetaan Data Kartu Ekosistem (Animasi Staggered Per Kartu) */}
+          {ecosystemCards.map((card, index) => (
             <div 
               key={card.id} 
               style={{
@@ -275,7 +321,10 @@ export default function Ecosystem() {
                 position: 'relative',
                 scrollSnapAlign: 'start',
                 overflow: 'hidden',
-                flexShrink: 0
+                flexShrink: 0,
+                opacity: 0,
+                /* Efek Jeda Beruntun (Staggered) berdasarkan Index Kartu */
+                animation: isVisible ? `slideUpFade 0.8s cubic-bezier(0.16, 1, 0.3, 1) ${0.5 + (index * 0.15)}s forwards` : 'none'
               }}
             >
               {/* Hamparan Gelap Pelindung Keseluruhan Kartu */}
@@ -356,7 +405,7 @@ export default function Ecosystem() {
           <div style={{
             backgroundColor: '#FFFFFF',
             borderRadius: '32px',
-            maxWidth: '850px', /* Diperlebar agar memuat teks detail dengan elegan */
+            maxWidth: '850px',
             width: '100%',
             position: 'relative',
             boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.3)',
@@ -365,7 +414,7 @@ export default function Ecosystem() {
             display: 'flex',
             flexDirection: 'column',
             overflow: 'hidden',
-            maxHeight: '90vh' /* Mencegah modal melebihi tinggi layar ponsel */
+            maxHeight: '90vh'
           }}>
             
             {/* Tombol Tutup Melayang Di Atas Gambar Sampul */}
@@ -487,14 +536,6 @@ export default function Ecosystem() {
           </div>
         </div>
       )}
-
-      {/* Tambahan Animasi CSS Sementara Di Dalam Kode */}
-      <style>{`
-        @keyframes fadeInUp {
-          from { opacity: 0; transform: translateY(30px) scale(0.95); }
-          to { opacity: 1; transform: translateY(0) scale(1); }
-        }
-      `}</style>
 
     </section>
   );

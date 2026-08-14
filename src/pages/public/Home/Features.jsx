@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 {/* Komponen Ikon Panah Diagonal Arah Kanan Atas SVG */}
 const ArrowUpRight = ({ color }) => (
@@ -24,11 +24,34 @@ export default function Features() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalContent, setModalContent] = useState({ title: '', description: '' });
 
+  {/* State dan Referensi Untuk Logika Animasi Scroll Reveal */}
+  const [isVisible, setIsVisible] = useState(false);
+  const featuresRef = useRef(null);
+
   {/* Logika Deteksi Ukuran Layar Untuk Susunan Kartu */}
   useEffect(() => {
     const handleResize = () => setWindowWidth(window.innerWidth);
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  {/* Logika Deteksi Visibilitas Komponen di Layar (Observer) */}
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+          observer.disconnect(); {/* Hentikan pantauan setelah animasi terpicu sekali */}
+        }
+      },
+      { threshold: 0.15 }
+    );
+
+    if (featuresRef.current) {
+      observer.observe(featuresRef.current);
+    }
+
+    return () => observer.disconnect();
   }, []);
 
   {/* Logika Penguncian Guliran Latar Saat Modal Terbuka */}
@@ -52,21 +75,32 @@ export default function Features() {
   const isMobile = windowWidth < 1024;
 
   return (
-    <section style={{
-      backgroundColor: '#FFFFFF',
-      width: '100%',
-      /* Sudut lengkung besar pemisah dengan area Hero */
-      borderTopLeftRadius: isMobile ? '40px' : '80px',
-      borderTopRightRadius: isMobile ? '40px' : '80px',
-      paddingTop: isMobile ? '60px' : '100px',
-      paddingBottom: '120px',
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      boxSizing: 'border-box',
-      position: 'relative'
-    }}>
+    <section 
+      ref={featuresRef}
+      style={{
+        backgroundColor: '#FFFFFF',
+        width: '100%',
+        /* Sudut lengkung besar pemisah dengan area Hero */
+        borderTopLeftRadius: isMobile ? '40px' : '80px',
+        borderTopRightRadius: isMobile ? '40px' : '80px',
+        paddingTop: isMobile ? '60px' : '100px',
+        paddingBottom: '120px',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        boxSizing: 'border-box',
+        position: 'relative'
+      }}
+    >
       
+      {/* Injeksi Gaya Animasi Global Khusus Komponen Features */}
+      <style>{`
+        @keyframes slideUpFade {
+          0% { opacity: 0; transform: translateY(50px); }
+          100% { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
+
       {/* Pembungkus Utama Lebar Maksimal Konten */}
       <div style={{ 
         maxWidth: '1200px', 
@@ -92,7 +126,10 @@ export default function Features() {
               lineHeight: '1.2',
               marginTop: '0',
               marginBottom: '16px',
-              letterSpacing: '-1px'
+              letterSpacing: '-1px',
+              opacity: 0,
+              /* Animasi judul muncul lebih dulu (0.1s delay) */
+              animation: isVisible ? 'slideUpFade 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.1s forwards' : 'none'
             }}>
               Tingkatkan efisiensi pembelajaran bahasa isyarat melalui infrastruktur teknologi berbasis analitik presisi.
             </h2>
@@ -104,7 +141,10 @@ export default function Features() {
               lineHeight: '1.6',
               margin: '0',
               marginLeft: isMobile ? '0' : 'auto',
-              maxWidth: '600px'
+              maxWidth: '600px',
+              opacity: 0,
+              /* Animasi deskripsi muncul setelah judul (0.25s delay) */
+              animation: isVisible ? 'slideUpFade 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.25s forwards' : 'none'
             }}>
               Sistem kami dirancang khusus memfasilitasi kebutuhan institusi dalam memantau perkembangan murid secara komprehensif.
             </p>
@@ -129,7 +169,10 @@ export default function Features() {
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'flex-end',
-            boxSizing: 'border-box'
+            boxSizing: 'border-box',
+            opacity: 0,
+            /* Animasi Kartu 1 (0.4s delay) */
+            animation: isVisible ? 'slideUpFade 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.4s forwards' : 'none'
           }}>
             <div 
               onClick={() => handleOpenModal('98%', 'Tingkat akurasi sistem dalam memvalidasi pergerakan gestur tangan didukung oleh model machine learning canggih yang meminimalisir tingkat kesalahan pembacaan secara real-time.')}
@@ -163,7 +206,10 @@ export default function Features() {
             flexDirection: 'column',
             justifyContent: 'flex-end',
             boxSizing: 'border-box',
-            marginTop: isMobile ? '0' : '60px' 
+            marginTop: isMobile ? '0' : '60px',
+            opacity: 0,
+            /* Animasi Kartu 2 (0.55s delay) */
+            animation: isVisible ? 'slideUpFade 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.55s forwards' : 'none'
           }}>
             <div 
               onClick={() => handleOpenModal('50+', 'Modul kosa kata bahasa isyarat disusun oleh para ahli, menjangkau materi dari tahap dasar perkenalan hingga struktur kalimat percakapan kompleks dan lanjutan.')}
@@ -200,7 +246,10 @@ export default function Features() {
             flexDirection: 'column',
             justifyContent: 'flex-end',
             boxSizing: 'border-box',
-            overflow: 'hidden'
+            overflow: 'hidden',
+            opacity: 0,
+            /* Animasi Kartu 3 (0.7s delay) */
+            animation: isVisible ? 'slideUpFade 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.7s forwards' : 'none'
           }}>
             {/* Hamparan Gelap Pelindung Teks */}
             <div style={{
@@ -244,7 +293,10 @@ export default function Features() {
             flexDirection: 'column',
             justifyContent: 'flex-end',
             boxSizing: 'border-box',
-            marginTop: isMobile ? '0' : '60px' 
+            marginTop: isMobile ? '0' : '60px',
+            opacity: 0,
+            /* Animasi Kartu 4 (0.85s delay) */
+            animation: isVisible ? 'slideUpFade 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.85s forwards' : 'none'
           }}>
             <div 
               onClick={() => handleOpenModal('100%', 'Komitmen penuh kami pada inklusivitas akses pendidikan anak bangsa memastikan semua platform dirancang agar mudah digunakan oleh difabel tanpa hambatan teknologi.')}
@@ -365,7 +417,7 @@ export default function Features() {
         </div>
       )}
 
-      {/* Tambahan Animasi CSS Sementara Di Dalam Kode (Inline) */}
+      {/* Tambahan Animasi CSS Sementara Di Dalam Kode (Inline) Khusus Modal */}
       <style>{`
         @keyframes fadeInUp {
           from { opacity: 0; transform: translateY(20px) scale(0.95); }
