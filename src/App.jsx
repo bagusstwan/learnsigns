@@ -18,7 +18,7 @@ import StudentManagementPage from './pages/StudentManagementPage';
 import PublicLayout from './layouts/PublicLayout';
 import Home from './pages/public/Home/Home';
 import About from './pages/public/About/About';
-import FeaturesPage from './pages/public/Features/FeaturesPage';
+import Features from './pages/public/Features/Features';
 
 /* Impor Modul Autentikasi */
 import Login from './pages/auth/Login';
@@ -153,7 +153,7 @@ export default function App() {
         <Route element={<PublicLayout />}>
            <Route path="/" element={<Home />} />
            <Route path="/about" element={<About />} />
-           <Route path="/features" element={<FeaturesPage />} />
+           <Route path="/features" element={<Features />} />
         </Route>
 
         <Route path="/login" element={<Login />} />
