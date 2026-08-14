@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'r
 
 /* Impor Komponen Dasbor Pribadi */
 import Sidebar from './components/Sidebar';
-import TopNavbar from './components/TopNavbar'; /* <--- IMPOR NAVBAR BARU KITA */
+import TopNavbar from './components/TopNavbar';
 import Dashboard from './components/Dashboard'; 
 import InteractiveModule from './pages/InteractiveModule';
 import QuestPage from './pages/QuestPage';
@@ -16,8 +16,8 @@ import StudentManagementPage from './pages/StudentManagementPage';
 
 /* Impor Komponen Situs Publik Terpadu */
 import PublicLayout from './layouts/PublicLayout';
-import Home from './pages/public/Home';
-import FeaturesPage from './pages/public/FeaturesPage';
+import Home from './pages/public/Home/Home';
+import FeaturesPage from './pages/public/Features/FeaturesPage';
 
 /* Impor Modul Autentikasi */
 import Login from './pages/auth/Login';
@@ -26,7 +26,7 @@ import '@fontsource/geist-sans';
 
 const IconMenu = () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0F172A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>;
 
-/* KOMPONEN PELINDUNG RUTE RESTRIKSI AKSES */
+/* Komponen Pelindung Rute Restriksi Akses */
 const ProtectedRoute = ({ children, allowedRoles }) => {
   const token = localStorage.getItem('token');
   const userStr = localStorage.getItem('user');
@@ -44,7 +44,7 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
   return children;
 };
 
-/* TATA LETAK DASBOR UTAMA APLIKASI */
+/* Tata Letak Dasbor Utama Aplikasi */
 const DashboardLayout = () => {
   const [activeMenu, setActiveMenu] = useState('modules'); 
   const [selectedLevel, setSelectedLevel] = useState(null);
@@ -102,10 +102,9 @@ const DashboardLayout = () => {
         userRole={user?.role} 
       />
 
-      {/* AREA KONTEN UTAMA */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflowY: 'auto', overflowX: 'hidden', position: 'relative' }}>
         
-        {/* --- PEMANGGILAN TOP NAVBAR CERDAS (Hanya dipanggil 1 kali untuk semua menu) --- */}
+        {/* Pemanggilan Top Navbar Khusus Modul Dasbor */}
         <TopNavbar 
           activeMenu={activeMenu} 
           setActiveMenu={setActiveMenu}
@@ -114,7 +113,7 @@ const DashboardLayout = () => {
           isMobile={isMobile} 
         />
 
-        {/* LOGIKA PEMANGGILAN KOMPONEN HALAMAN */}
+        {/* Logika Pemanggilan Komponen Halaman Dasbor */}
         {activeMenu === 'modules' && !selectedLevel && (
           <Dashboard 
             setSelectedLevel={setSelectedLevel} 
@@ -129,7 +128,7 @@ const DashboardLayout = () => {
           />
         )}
 
-        {/* ROUTING KOMPONEN LAINNYA */}
+        {/* Routing Komponen Sub Menu Lainnya */}
         {activeMenu === 'progress' && <ProgressPage />}
         {activeMenu === 'quests' && <QuestPage />}
         {activeMenu === 'educator' && user?.role !== 'student' && <EducatorPage />}
@@ -143,13 +142,13 @@ const DashboardLayout = () => {
   );
 };
 
-/* KOMPONEN PENGATUR RUTE APLIKASI UTAMA */
+/* Komponen Pengatur Rute Aplikasi Utama */
 export default function App() {
   return (
     <Router>
       <Routes>
         
-        {/* RUTE MULTI HALAMAN PUBLIK DIBUNGKUS LAYOUT */}
+        {/* Rute Multi Halaman Publik dengan Konfigurasi Tata Letak Bersarang */}
         <Route element={<PublicLayout />}>
            <Route path="/" element={<Home />} />
            <Route path="/features" element={<FeaturesPage />} />
@@ -158,7 +157,7 @@ export default function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         
-        {/* RUTE TERPROTEKSI WAJIB AUTENTIKASI */}
+        {/* Rute Terproteksi Khusus Pengguna Terautentikasi */}
         <Route 
           path="/dashboard" 
           element={
