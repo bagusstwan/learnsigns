@@ -19,6 +19,7 @@ import PublicLayout from './layouts/PublicLayout';
 import Home from './pages/public/Home/Home';
 import About from './pages/public/About/About';
 import Features from './pages/public/Features/Features';
+import Contact from './pages/public/Contact/Contact';
 
 /* Impor Modul Autentikasi */
 import Login from './pages/auth/Login';
@@ -154,6 +155,7 @@ export default function App() {
            <Route path="/" element={<Home />} />
            <Route path="/about" element={<About />} />
            <Route path="/features" element={<Features />} />
+            <Route path="/contact" element={<Contact />} />
         </Route>
 
         <Route path="/login" element={<Login />} />
