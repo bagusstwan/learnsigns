@@ -1,7 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import PropTypes from 'prop-types';
+import { useNavigate, useLocation } from 'react-router-dom';
 
-/** Icon SVG Assets */
+/**
+ * SVG ICON ASSETS
+ */
 const IconTrophy = () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path><path d="M4 22h16"></path><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"></path><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"></path><path d="M18 2H6v7a6 6 0 0 0 12 0V2z"></path></svg>;
 const IconUsers = () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>;
 const IconCheckCircle = () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>;
@@ -16,7 +19,7 @@ const IconChevronLeft = () => <svg width="18" height="18" viewBox="0 0 24 24" fi
 const IconChevronRight = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>;
 const IconClose = () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>;
 
-/** Additional Icons for Right Panel */
+/** Right Panel Specific Icons */
 const IconListTask = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 11 12 14 22 4"></polyline><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>;
 const IconProgress = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>;
 const IconCheckEval = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>;
@@ -25,19 +28,19 @@ const IconClipboard = () => <svg width="18" height="18" viewBox="0 0 24 24" fill
 
 export default function Dashboard({ setSelectedLevel, isMobile, isDesktop }) {
   
+  const navigate = useNavigate();
+  const location = useLocation();
+
   const [activeTab, setActiveTab] = useState('tugas_berjalan');
   const [viewMode, setViewMode] = useState('grid');
   const [filterType, setFilterType] = useState('Semua');
   const [sortOrder, setSortOrder] = useState('terbaru');
-  
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isSortOpen, setIsSortOpen] = useState(false);
-  
   const filterRef = useRef(null);
   const sortRef = useRef(null);
 
   const [activeEvalTab, setActiveEvalTab] = useState('perlu_dinilai');
-  
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [selectedAssignmentDetail, setSelectedAssignmentDetail] = useState(null);
 
@@ -47,6 +50,8 @@ export default function Dashboard({ setSelectedLevel, isMobile, isDesktop }) {
     active_modules: [],
     pending_students: []
   });
+
+  const [evaluatedIds, setEvaluatedIds] = useState([]);
 
   const today = new Date();
   const [selectedDate, setSelectedDate] = useState(today);
@@ -61,14 +66,11 @@ export default function Dashboard({ setSelectedLevel, isMobile, isDesktop }) {
     result.setDate(result.getDate() + days);
     return result;
   };
-
   const handlePrevDays = () => setCalendarStart(addDays(calendarStart, -5));
   const handleNextDays = () => setCalendarStart(addDays(calendarStart, 5));
-
   const isSameDay = (d1, d2) => {
     return d1.getDate() === d2.getDate() && d1.getMonth() === d2.getMonth() && d1.getFullYear() === d2.getFullYear();
   };
-
   const currentMonthYear = calendarStart.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
 
   useEffect(() => {
@@ -98,9 +100,45 @@ export default function Dashboard({ setSelectedLevel, isMobile, isDesktop }) {
         setIsLoading(false);
       }
     };
-
     fetchDashboardData();
   }, []);
+
+  useEffect(() => {
+    if (location.state && location.state.evaluatedStudentIdentifier) {
+      const targetIdentifier = String(location.state.evaluatedStudentIdentifier);
+
+      setDashboardData(prevData => {
+        if (!prevData.pending_students) return prevData;
+
+        const updatedPendingStudents = prevData.pending_students.map(student => {
+          const studentIdStr = String(student.id || '');
+          const studentNameStr = String(student.name || '');
+
+          if (studentIdStr === targetIdentifier || studentNameStr === targetIdentifier) {
+            return { 
+                ...student, 
+                status: 'Selesai Dinilai',
+                // Optimistic UI Update untuk Bintang jika tersedia dari router
+                stars_earned: location.state.submittedStars || student.stars_earned 
+            };
+          }
+          return student;
+        });
+
+        return {
+          ...prevData,
+          stats: {
+            ...prevData.stats,
+            pending_evaluations: Math.max(0, (prevData.stats.pending_evaluations || 0) - 1),
+            completed_modules: (prevData.stats.completed_modules || 0) + 1
+          },
+          pending_students: updatedPendingStudents
+        };
+      });
+
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -122,9 +160,24 @@ export default function Dashboard({ setSelectedLevel, isMobile, isDesktop }) {
 
   const getFilteredPendingStudents = () => {
     if (!dashboardData.pending_students) return [];
-    if (activeEvalTab === 'selesai') return []; 
-    if (activeEvalTab === 'berjalan') return dashboardData.pending_students.filter(student => student.status === 'Belum Dikerjakan' || student.status === 'Sedang Dikerjakan');
-    return dashboardData.pending_students.filter(student => student.status === 'Menunggu Penilaian' || student.status === 'Belum Dinilai');
+    
+    const activeStudentsList = dashboardData.pending_students;
+
+    if (activeEvalTab === 'selesai') {
+      return activeStudentsList.filter(student => 
+        ['Selesai Dinilai', 'Selesai', 'Evaluated'].includes(student.status)
+      );
+    }
+    
+    if (activeEvalTab === 'berjalan') {
+      return activeStudentsList.filter(student => 
+        ['Belum Dikerjakan', 'Sedang Dikerjakan'].includes(student.status)
+      );
+    }
+    
+    return activeStudentsList.filter(student => 
+      ['Menunggu Penilaian', 'Belum Dinilai', 'Pending'].includes(student.status)
+    );
   };
 
   const EmptyState = ({ title, message, iconType = 'default' }) => (
@@ -162,12 +215,17 @@ export default function Dashboard({ setSelectedLevel, isMobile, isDesktop }) {
   const displayedModules = getProcessedModules();
   const filteredStudents = getFilteredPendingStudents();
 
+  const realTimePendingCount = Math.max(0, (dashboardData.stats.pending_evaluations || 0) - evaluatedIds.length);
+  const realTimeCompletedCount = (dashboardData.stats.completed_modules || 0) + evaluatedIds.length;
+
   return (
     <>
     <div style={{ display: 'flex', flexDirection: isDesktop ? 'row' : 'column', width: '100%', minHeight: '100vh', backgroundColor: '#F8FAFC', boxSizing: 'border-box' }}>
       
+      {/* Main Content Area */}
       <main style={{ flex: isDesktop ? 1 : 'none', padding: isMobile ? '24px 16px' : '40px 48px', overflowY: isDesktop ? 'auto' : 'visible', boxSizing: 'border-box', width: '100%' }}>
         
+        {/* Header Section */}
         <div style={{ marginBottom: '40px' }}>
           <h1 style={{ margin: '8px 0', fontSize: isMobile ? '28px' : '36px', fontWeight: '800', color: '#0F172A', letterSpacing: '-0.5px' }}>
             Tinjauan Akademik Kelas
@@ -177,6 +235,7 @@ export default function Dashboard({ setSelectedLevel, isMobile, isDesktop }) {
           </p>
         </div>
 
+        {/* Statistical Overview Cards */}
         <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px', marginBottom: isMobile ? '32px' : '48px' }}>
           <div style={{ backgroundColor: '#FFFFFF', borderRadius: '16px', padding: '24px', display: 'flex', alignItems: 'center', gap: '20px', border: '1px solid #E2E8F0', boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.05)' }}>
             <div style={{ width: '56px', height: '56px', borderRadius: '50%', backgroundColor: '#0F172A', color: '#FFFFFF', display: 'flex', justifyContent: 'center', alignItems: 'center', flexShrink: 0 }}><IconUsers /></div>
@@ -189,7 +248,7 @@ export default function Dashboard({ setSelectedLevel, isMobile, isDesktop }) {
           <div style={{ backgroundColor: '#FFFFFF', borderRadius: '16px', padding: '24px', display: 'flex', alignItems: 'center', gap: '20px', border: '1px solid #E2E8F0', boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.05)' }}>
             <div style={{ width: '56px', height: '56px', borderRadius: '50%', backgroundColor: '#0F172A', color: '#FFFFFF', display: 'flex', justifyContent: 'center', alignItems: 'center', flexShrink: 0 }}><IconCheckCircle /></div>
             <div>
-              <h3 style={{ margin: 0, fontSize: '32px', fontWeight: '700', color: '#0F172A', lineHeight: '1.1' }}>{dashboardData.stats.completed_modules || 0}</h3>
+              <h3 style={{ margin: 0, fontSize: '32px', fontWeight: '700', color: '#0F172A', lineHeight: '1.1' }}>{realTimeCompletedCount}</h3>
               <span style={{ fontSize: '13px', fontWeight: '400', color: '#64748B', display: 'block', marginTop: '4px' }}>Modul Diselesaikan</span>
             </div>
           </div>
@@ -197,13 +256,13 @@ export default function Dashboard({ setSelectedLevel, isMobile, isDesktop }) {
           <div style={{ backgroundColor: '#FFFFFF', borderRadius: '16px', padding: '24px', display: 'flex', alignItems: 'center', gap: '20px', border: '1px solid #E2E8F0', boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.05)' }}>
             <div style={{ width: '56px', height: '56px', borderRadius: '50%', backgroundColor: '#0F172A', color: '#FFFFFF', display: 'flex', justifyContent: 'center', alignItems: 'center', flexShrink: 0 }}><IconTrophy /></div>
             <div>
-              <h3 style={{ margin: 0, fontSize: '32px', fontWeight: '700', color: '#0F172A', lineHeight: '1.1' }}>{dashboardData.stats.pending_evaluations || 0}</h3>
+              <h3 style={{ margin: 0, fontSize: '32px', fontWeight: '700', color: '#0F172A', lineHeight: '1.1' }}>{realTimePendingCount}</h3>
               <span style={{ fontSize: '13px', fontWeight: '400', color: '#64748B', display: 'block', marginTop: '4px' }}>Evaluasi Tertunda</span>
             </div>
           </div>
         </div>
 
-        {/** Tab Selection and Feature Controls */}
+        {/* Tab Selection and Filtering Controls */}
         <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', justifyContent: 'space-between', alignItems: isMobile ? 'stretch' : 'center', gap: '16px', marginBottom: '32px' }}>
           
           <div style={{ display: 'flex', backgroundColor: '#F1F5F9', borderRadius: '999px', padding: '6px', border: '1px solid #E2E8F0', width: isMobile ? '100%' : 'fit-content' }}>
@@ -268,6 +327,7 @@ export default function Dashboard({ setSelectedLevel, isMobile, isDesktop }) {
           </div>
         </div>
 
+        {/* Modules Grid / List View */}
         {displayedModules.length > 0 ? (
           <div style={{ 
             display: viewMode === 'grid' ? 'grid' : 'flex', 
@@ -328,6 +388,7 @@ export default function Dashboard({ setSelectedLevel, isMobile, isDesktop }) {
 
       </main>
 
+      {/* Right Sidebar - Student Evaluations Panel */}
       <aside style={{ 
         width: isDesktop ? '400px' : '100%', 
         backgroundColor: '#FFFFFF', 
@@ -345,6 +406,7 @@ export default function Dashboard({ setSelectedLevel, isMobile, isDesktop }) {
             <span style={{ fontSize: '14px', fontWeight: '500', color: '#64748B', textTransform: 'capitalize' }}>{currentMonthYear}</span>
         </div>
 
+        {/* Date Selector Navigation */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px' }}>
            <button onClick={handlePrevDays} style={{ background: 'none', border: 'none', color: '#94A3B8', cursor: 'pointer', padding: '8px', display: 'flex' }}><IconChevronLeft /></button>
            
@@ -379,7 +441,7 @@ export default function Dashboard({ setSelectedLevel, isMobile, isDesktop }) {
            <button onClick={handleNextDays} style={{ background: 'none', border: 'none', color: '#94A3B8', cursor: 'pointer', padding: '8px', display: 'flex' }}><IconChevronRight /></button>
         </div>
 
-        {/* KUNCI PERBAIKAN: Flex '1 1 0%' pada ketiga tab panel samping */}
+        {/* Evaluation Status Tabs */}
         <div style={{ display: 'flex', width: '100%', borderBottom: '1px solid #E2E8F0', paddingBottom: '16px', marginBottom: '32px' }}>
           <button onClick={() => setActiveEvalTab('perlu_dinilai')} style={{ flex: '1 1 0%', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', fontSize: isMobile ? '13px' : '14px', fontWeight: activeEvalTab === 'perlu_dinilai' ? '600' : '500', color: activeEvalTab === 'perlu_dinilai' ? '#0F172A' : '#94A3B8', cursor: 'pointer', position: 'relative', background: 'none', border: 'none', padding: 0 }}>
             <IconListTask /> {!isMobile && "Perlu Dinilai"} {isMobile && "Tertunda"}
@@ -397,48 +459,61 @@ export default function Dashboard({ setSelectedLevel, isMobile, isDesktop }) {
           </button>
         </div>
 
+        {/* Student Active Assignment Cards */}
         {filteredStudents.length > 0 ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-            {filteredStudents.map((student, index) => (
+            {filteredStudents.map((student, index) => {
+              const isCompleted = ['Selesai Dinilai', 'Selesai', 'Evaluated'].includes(student.status);
+
+              return (
               <div key={index} style={{ border: '1px solid #E2E8F0', borderRadius: '20px', padding: '24px', backgroundColor: '#FFFFFF', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.02)' }}>
                 
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-                    <img src={student.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(student.name || 'Student')}&background=F1F5F9&color=0F172A`} alt={student.name} style={{ width: '48px', height: '48px', borderRadius: '50%', objectFit: 'cover' }} />
-                    <div>
-                      <h4 style={{ margin: 0, fontSize: '15px', fontWeight: '500', color: '#0F172A' }}>{student.name || 'Nama Siswa'}</h4>
-                      <span style={{ fontSize: '13px', color: '#64748B', fontWeight: '400' }}>{student.email || 'Email tidak tersedia'}</span>
+                {/* Profile Header dengan Perbaikan Teks Overflow */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', gap: '12px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '14px', minWidth: 0, flex: 1 }}>
+                    <img src={student.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(student.name || 'Student')}&background=F1F5F9&color=0F172A`} alt={student.name} style={{ width: '48px', height: '48px', borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
+                    <div style={{ minWidth: 0, flex: 1 }}>
+                      <h4 style={{ margin: 0, fontSize: '15px', fontWeight: '600', color: '#0F172A', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{student.name || 'Nama Siswa'}</h4>
+                      <span style={{ fontSize: '13px', color: '#64748B', fontWeight: '400', display: 'block', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{student.email || 'Email tidak tersedia'}</span>
                     </div>
                   </div>
-                  <button onClick={() => openAssignmentModal(student)} style={{ width: '36px', height: '36px', borderRadius: '50%', border: '1px solid #E2E8F0', backgroundColor: '#F8FAFC', display: 'flex', justifyContent: 'center', alignItems: 'center', cursor: 'pointer', color: '#64748B', transition: 'all 0.2s' }} className="arrow-out-btn">
+                  <button onClick={() => openAssignmentModal(student)} style={{ width: '36px', height: '36px', borderRadius: '50%', border: '1px solid #E2E8F0', backgroundColor: '#F8FAFC', display: 'flex', justifyContent: 'center', alignItems: 'center', cursor: 'pointer', color: '#64748B', transition: 'all 0.2s', flexShrink: 0 }} className="arrow-out-btn">
                     <IconArrowOut />
                   </button>
                 </div>
 
+                {/* Assignment Metrics */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '24px', backgroundColor: '#F8FAFC', padding: '16px', borderRadius: '12px' }}>
                   <div>
-                    <span style={{ display: 'block', fontSize: '11px', fontWeight: '500', color: '#94A3B8', textTransform: 'uppercase', marginBottom: '6px', letterSpacing: '0.5px' }}>Tingkat Akurasi</span>
-                    <span style={{ fontSize: '15px', fontWeight: '500', color: student.accuracy && student.accuracy !== '0%' ? '#10B981' : '#64748B' }}>
-                      {student.accuracy || '0%'} Valid
+                    <span style={{ display: 'block', fontSize: '11px', fontWeight: '600', color: '#94A3B8', textTransform: 'uppercase', marginBottom: '6px', letterSpacing: '0.5px' }}>
+                      {isCompleted ? 'Poin Evaluasi' : 'Tingkat Akurasi'}
+                    </span>
+                    <span style={{ fontSize: '15px', fontWeight: '500', color: isCompleted ? '#10B981' : '#64748B' }}>
+                      {isCompleted ? `${student.stars_earned || 0} / 50 Bintang` : 'Menunggu Penilaian'}
                     </span>
                   </div>
                   <div style={{ textAlign: 'right' }}>
-                    <span style={{ display: 'block', fontSize: '11px', fontWeight: '500', color: '#94A3B8', textTransform: 'uppercase', marginBottom: '6px', letterSpacing: '0.5px' }}>Modul Aktif</span>
+                    <span style={{ display: 'block', fontSize: '11px', fontWeight: '600', color: '#94A3B8', textTransform: 'uppercase', marginBottom: '6px', letterSpacing: '0.5px' }}>Modul Aktif</span>
                     <span style={{ fontSize: '15px', fontWeight: '500', color: '#0F172A' }}>{student.active_module || '-'}</span>
                   </div>
                 </div>
 
+                {/* Call-to-Action Action Buttons */}
                 <div style={{ display: 'flex', gap: '12px' }}>
                   <button style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '14px', backgroundColor: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: '12px', fontSize: '13px', fontWeight: '500', color: '#475569', cursor: 'pointer' }}>
                     <IconClock /> Pengingat
                   </button>
-                  <button style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '14px', backgroundColor: '#0F172A', border: 'none', borderRadius: '12px', fontSize: '13px', fontWeight: '500', color: '#FFFFFF', cursor: 'pointer' }}>
-                    <IconCheck /> Penilaian
+                  <button 
+                    onClick={() => !isCompleted && openAssignmentModal(student)} 
+                    style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '14px', backgroundColor: isCompleted ? '#F1F5F9' : '#0F172A', border: 'none', borderRadius: '12px', fontSize: '13px', fontWeight: '500', color: isCompleted ? '#94A3B8' : '#FFFFFF', cursor: isCompleted ? 'default' : 'pointer' }}
+                  >
+                    <IconCheck /> {isCompleted ? 'Ternilai' : 'Penilaian'}
                   </button>
                 </div>
 
               </div>
-            ))}
+            );
+            })}
           </div>
         ) : (
           <EmptyState 
@@ -452,6 +527,7 @@ export default function Dashboard({ setSelectedLevel, isMobile, isDesktop }) {
 
     </div>
 
+    {/* Assignment Evaluation Modal */}
     {isDetailModalOpen && selectedAssignmentDetail && (
         <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(15, 23, 42, 0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 100, backdropFilter: 'blur(4px)', animation: 'fadeIn 0.2s' }} onClick={closeAssignmentModal}>
             <div style={{ backgroundColor: '#FFFFFF', width: isMobile ? '90%' : '480px', borderRadius: '24px', padding: '32px', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.2)', position: 'relative', animation: 'scaleUp 0.2s' }} onClick={e => e.stopPropagation()}>
@@ -471,7 +547,7 @@ export default function Dashboard({ setSelectedLevel, isMobile, isDesktop }) {
                     <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
                         <div style={{ width: '40px', height: '40px', borderRadius: '10px', backgroundColor: '#EEF2FF', display: 'flex', justifyContent: 'center', alignItems: 'center', border: '1px solid #C7D2FE' }}><IconClipboard/></div>
                         <div>
-                            <span style={{ display: 'block', fontSize: '11px', fontWeight: '500', color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Judul Modul</span>
+                            <span style={{ display: 'block', fontSize: '11px', fontWeight: '600', color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Judul Modul</span>
                             <span style={{ fontSize: '15px', fontWeight: '500', color: '#0F172A' }}>{selectedAssignmentDetail.active_module || '-'}</span>
                         </div>
                     </div>
@@ -479,7 +555,7 @@ export default function Dashboard({ setSelectedLevel, isMobile, isDesktop }) {
                     <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
                         <div style={{ width: '40px', height: '40px', borderRadius: '10px', backgroundColor: '#ECFDF5', display: 'flex', justifyContent: 'center', alignItems: 'center', border: '1px solid #6EE7B7' }}><IconCheckEval/></div>
                         <div>
-                            <span style={{ display: 'block', fontSize: '11px', fontWeight: '500', color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Target Akurasi</span>
+                            <span style={{ display: 'block', fontSize: '11px', fontWeight: '600', color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Target Akurasi</span>
                             <span style={{ fontSize: '15px', fontWeight: '500', color: '#0F172A' }}>Minimal {selectedAssignmentDetail.target || '90% Valid'}</span>
                         </div>
                     </div>
@@ -487,8 +563,10 @@ export default function Dashboard({ setSelectedLevel, isMobile, isDesktop }) {
                     <div style={{ height: '1px', backgroundColor: '#F1F5F9', margin: '8px 0' }}></div>
 
                     <div style={{ backgroundColor: '#F8FAFC', padding: '16px', borderRadius: '12px', border: '1px solid #E2E8F0' }}>
-                        <span style={{ display: 'block', fontSize: '11px', fontWeight: '500', color: '#94A3B8', textTransform: 'uppercase', marginBottom: '8px', letterSpacing: '0.5px' }}>Catatan Penugasan</span>
-                        <p style={{ margin: 0, fontSize: '14px', color: '#475569', lineHeight: '1.6' }}>{selectedAssignmentDetail.notes || 'Fokus pada kelancaran gerakan tangan untuk abjad S, I, dan B. Jaga pencahayaan saat merekam.'}</p>
+                        <span style={{ display: 'block', fontSize: '11px', fontWeight: '600', color: '#94A3B8', textTransform: 'uppercase', marginBottom: '8px', letterSpacing: '0.5px' }}>Catatan Penugasan</span>
+                        <p style={{ margin: 0, fontSize: '14px', color: '#475569', lineHeight: '1.6' }}>
+                           {selectedAssignmentDetail.notes || selectedAssignmentDetail.desc || selectedAssignmentDetail.description || 'Tidak ada catatan atau instruksi tambahan untuk penugasan ini.'}
+                        </p>
                     </div>
 
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '12px' }}>
@@ -502,7 +580,7 @@ export default function Dashboard({ setSelectedLevel, isMobile, isDesktop }) {
 
                 <div style={{ marginTop: '32px', display: 'flex', gap: '12px' }}>
                     <button onClick={closeAssignmentModal} style={{ flex: 1, padding: '14px', backgroundColor: '#FFFFFF', color: '#475569', border: '1px solid #E2E8F0', borderRadius: '12px', fontSize: '14px', fontWeight: '500', cursor: 'pointer' }}>Batal</button>
-                    <button onClick={() => { closeAssignmentModal(); alert('Fitur evaluasi akan segera hadir Pak Bagus!'); }} style={{ flex: 2, padding: '14px', backgroundColor: '#0F172A', color: '#FFFFFF', border: 'none', borderRadius: '12px', fontSize: '14px', fontWeight: '500', cursor: 'pointer' }}>Mulai Evaluasi</button>
+                    <button onClick={() => { closeAssignmentModal(); navigate('/educator/evaluation', { state: { studentData: selectedAssignmentDetail } }); }} style={{ flex: 2, padding: '14px', backgroundColor: '#0F172A', color: '#FFFFFF', border: 'none', borderRadius: '12px', fontSize: '14px', fontWeight: '500', cursor: 'pointer' }}>Mulai Evaluasi</button>
                 </div>
 
             </div>

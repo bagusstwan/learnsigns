@@ -13,6 +13,7 @@ import ProfilePage from './pages/ProfilePage';
 import SettingsPage from './pages/SettingsPage';
 import LeaderboardPage from './pages/LeaderboardPage';
 import StudentManagementPage from './pages/StudentManagementPage';
+import EvaluationWorkspace from './pages/educator/EvaluationWorkspace';
 
 /* Impor Komponen Situs Publik Terpadu */
 import PublicLayout from './layouts/PublicLayout';
@@ -170,6 +171,13 @@ export default function App() {
             </ProtectedRoute>
           } 
         />
+
+        <Route path="/educator/evaluation" element={
+          <ProtectedRoute allowedRoles={['teacher', 'corporate']}>
+             <EvaluationWorkspace />
+          </ProtectedRoute>
+        } />
+
       </Routes>
     </Router>
   );
