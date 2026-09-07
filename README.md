@@ -1,7 +1,7 @@
-# Viba.ai Client Interface (learnsigns)
+# Nusa.ai Client Interface (learnsigns)
 
 ## Deskripsi Repositori
-`learnsigns` adalah repositori antarmuka klien (frontend) untuk platform Viba.ai. Aplikasi ini mengimplementasikan konsep *Single Page Application* (SPA) interaktif yang memberikan pengalaman pengguna (UX) responsif, modern, dan mulus. Antarmuka ini dirancang khusus untuk memfasilitasi pembelajaran bahasa isyarat yang ditenagai oleh Kecerdasan Buatan, serta menyediakan ruang kerja khusus bagi tenaga pendidik dan institusi.
+`learnsigns` adalah repositori antarmuka klien (frontend) untuk platform Nusa.ai. Aplikasi ini mengimplementasikan konsep *Single Page Application* (SPA) interaktif yang memberikan pengalaman pengguna (UX) responsif, modern, dan mulus. Antarmuka ini dirancang khusus untuk memfasilitasi pembelajaran bahasa isyarat yang ditenagai oleh Kecerdasan Buatan, serta menyediakan ruang kerja khusus bagi tenaga pendidik dan institusi.
 
 ## Tumpukan Teknologi (Tech Stack)
 *   **Framework Utama:** React.js
@@ -13,7 +13,7 @@
 
 ### Sistem Portal Publik terpadu
 *   **Beranda (Home):** Halaman arahan (landing page) yang mempresentasikan proposisi nilai platform.
-*   **Tentang Kami (About):** Dokumentasi visi misi dan latar belakang pengembangan Viba.ai.
+*   **Tentang Kami (About):** Dokumentasi visi misi dan latar belakang pengembangan Nusa.ai.
 *   **Fitur (Features):** Rincian teknis kapabilitas sistem dan teknologi AI yang digunakan.
 *   **Kontak (Contact):** Saluran komunikasi resmi untuk kemitraan dan dukungan operasional.
 
