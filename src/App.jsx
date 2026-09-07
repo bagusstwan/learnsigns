@@ -25,11 +25,11 @@ import Contact from './pages/public/Contact/Contact';
 /* Impor Modul Autentikasi */
 import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
+import AuthCallback from './pages/auth/AuthCallback';
 import '@fontsource/geist-sans';
 
 const IconMenu = () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0F172A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>;
 
-/* Komponen Pelindung Rute Restriksi Akses */
 const ProtectedRoute = ({ children, allowedRoles }) => {
   const token = localStorage.getItem('token');
   const userStr = localStorage.getItem('user');
@@ -47,7 +47,6 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
   return children;
 };
 
-/* Tata Letak Dasbor Utama Aplikasi */
 const DashboardLayout = () => {
   const [activeMenu, setActiveMenu] = useState('modules'); 
   const [selectedLevel, setSelectedLevel] = useState(null);
@@ -106,8 +105,6 @@ const DashboardLayout = () => {
       />
 
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflowY: 'auto', overflowX: 'hidden', position: 'relative' }}>
-        
-        {/* Pemanggilan Top Navbar Khusus Modul Dasbor */}
         <TopNavbar 
           activeMenu={activeMenu} 
           setActiveMenu={setActiveMenu}
@@ -116,7 +113,6 @@ const DashboardLayout = () => {
           isMobile={isMobile} 
         />
 
-        {/* Logika Pemanggilan Komponen Halaman Dasbor */}
         {activeMenu === 'modules' && !selectedLevel && (
           <Dashboard 
             setSelectedLevel={setSelectedLevel} 
@@ -131,7 +127,6 @@ const DashboardLayout = () => {
           />
         )}
 
-        {/* Routing Komponen Sub Menu Lainnya */}
         {activeMenu === 'progress' && <ProgressPage />}
         {activeMenu === 'quests' && <QuestPage />}
         {activeMenu === 'educator' && user?.role !== 'student' && <EducatorPage />}
@@ -140,29 +135,27 @@ const DashboardLayout = () => {
         {activeMenu === 'settings' && <SettingsPage />}
         {activeMenu === 'leaderboard' && <LeaderboardPage />}
       </div>
-
     </div>
   );
 };
 
-/* Komponen Pengatur Rute Aplikasi Utama */
 export default function App() {
   return (
     <Router>
       <Routes>
-        
-        {/* Rute Multi Halaman Publik dengan Konfigurasi Tata Letak Bersarang */}
         <Route element={<PublicLayout />}>
            <Route path="/" element={<Home />} />
            <Route path="/about" element={<About />} />
            <Route path="/features" element={<Features />} />
-            <Route path="/contact" element={<Contact />} />
+           <Route path="/contact" element={<Contact />} />
         </Route>
 
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         
-        {/* Rute Terproteksi Khusus Pengguna Terautentikasi */}
+        {/* RUTE BARU: Callback Google SSO */}
+        <Route path="/auth/callback" element={<AuthCallback />} />
+        
         <Route 
           path="/dashboard" 
           element={
@@ -177,7 +170,6 @@ export default function App() {
              <EvaluationWorkspace />
           </ProtectedRoute>
         } />
-
       </Routes>
     </Router>
   );

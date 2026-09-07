@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import '@fontsource/geist-sans';
 
 const IconEye = () => (
@@ -27,6 +27,7 @@ export default function Register() {
   const [isLoading, setIsLoading] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
   const navigate = useNavigate();
+  const location = useLocation();
 
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api/v1';
 
@@ -38,11 +39,16 @@ export default function Register() {
     const handleResize = () => setIsMobile(window.innerWidth < 1024);
     window.addEventListener('resize', handleResize);
     
+    const urlParams = new URLSearchParams(location.search);
+    if (urlParams.get('error')) {
+      setError('Otentikasi Google gagal. Silakan coba lagi.');
+    }
+
     return () => {
       window.removeEventListener('resize', handleResize);
       document.body.style.overflow = "auto";
     };
-  }, []);
+  }, [location]);
 
   const handleChange = (e) => {
     setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
@@ -56,7 +62,6 @@ export default function Register() {
   const handleRegister = async (e) => {
     e.preventDefault();
     
-    // SECURE 1: Validasi Sisi Klien Ketat
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(formData.email.trim())) {
       return setError('Format alamat email tidak valid.');
@@ -86,10 +91,7 @@ export default function Register() {
 
       const response = await fetch(`${API_BASE_URL}/register`, {
         method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json', 
-          'Accept': 'application/json' 
-        },
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
         body: JSON.stringify(payload)
       });
 
@@ -103,7 +105,6 @@ export default function Register() {
       localStorage.setItem('user', JSON.stringify(data.user));
 
       navigate('/dashboard');
-      
     } catch (err) {
       setError(err.message);
     } finally {
@@ -111,102 +112,46 @@ export default function Register() {
     }
   };
 
-  const handleGoogleSignup = () => {
-    console.log(`Memulai pendaftaran Google untuk peran: ${activeRole}`);
+  // Handler SSO Google dengan Pengiriman Role
+  const handleGoogleSignup = async () => {
     setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
-      if (activeRole === 'corporate') {
-        alert("Otentikasi Google berhasil. Silakan lengkapi data institusi Anda pada langkah selanjutnya.");
-      } else {
-        alert("Otentikasi Google berhasil. Akun Anda sedang disiapkan.");
+    try {
+      // Mengirim peran (student/corporate) ke URL Laravel untuk disimpan saat auto-register
+      const response = await fetch(`${API_BASE_URL}/auth/google?role=${activeRole === 'corporate' ? 'teacher' : 'student'}`);
+      const data = await response.json();
+      if (data.url) {
+        window.location.href = data.url; // Alihkan ke layar persetujuan Google
       }
-    }, 1000);
+    } catch (err) {
+      setError("Gagal terhubung ke server otentikasi Google.");
+      setIsLoading(false);
+    }
   };
 
   return (
-    <div style={{ 
-      width: '100vw', 
-      height: '100vh', 
-      display: 'flex', 
-      flexDirection: isMobile ? 'column' : 'row', 
-      backgroundColor: '#FFFFFF', 
-      fontFamily: '"Geist Sans", -apple-system, sans-serif', 
-      overflow: 'hidden',
-      boxSizing: 'border-box'
-    }}>
+    <div style={{ width: '100vw', height: '100vh', display: 'flex', flexDirection: isMobile ? 'column' : 'row', backgroundColor: '#FFFFFF', fontFamily: '"Geist Sans", -apple-system, sans-serif', overflow: 'hidden', boxSizing: 'border-box' }}>
       
       {/* VISUAL BACKGROUND MILIK ANDA */}
-      <div style={{ 
-        flex: isMobile ? 'none' : '1', 
-        width: isMobile ? '100vw' : '50vw',
-        height: isMobile ? '25vh' : '100vh', 
-        padding: isMobile ? '16px' : '32px', 
-        boxSizing: 'border-box',
-        display: 'flex'
-      }}>
-        <div style={{ 
-          flex: 1, 
-          position: 'relative', 
-          borderRadius: isMobile ? '24px' : '40px',
-          borderTopRightRadius: isMobile ? '24px' : '120px',
-          borderBottomLeftRadius: isMobile ? '24px' : '120px',
-          overflow: 'hidden', 
-          backgroundColor: '#F1F5F9',
-          boxShadow: 'inset 0 0 0 1px rgba(0,0,0,0.05)'
-        }}>
-          <img 
-            src="src/assets/validation1.jpg" 
-            alt="Ilustrasi Registrasi Viba.ai" 
-            style={{ 
-              width: '100%', 
-              height: '100%', 
-              objectFit: 'cover', 
-              position: 'absolute', 
-              top: 0, 
-              left: 0 
-            }} 
-          />
+      <div style={{ flex: isMobile ? 'none' : '1', width: isMobile ? '100vw' : '50vw', height: isMobile ? '25vh' : '100vh', padding: isMobile ? '16px' : '32px', boxSizing: 'border-box', display: 'flex' }}>
+        <div style={{ flex: 1, position: 'relative', borderRadius: isMobile ? '24px' : '40px', borderTopRightRadius: isMobile ? '24px' : '120px', borderBottomLeftRadius: isMobile ? '24px' : '120px', overflow: 'hidden', backgroundColor: '#F1F5F9', boxShadow: 'inset 0 0 0 1px rgba(0,0,0,0.05)' }}>
+          <img src="src/assets/validation1.jpg" alt="Ilustrasi Registrasi Viba.ai" style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', top: 0, left: 0 }} />
         </div>
       </div>
 
       {/* FORMULIR REGISTRASI */}
-      <div style={{ 
-        flex: isMobile ? '1' : '1', 
-        width: isMobile ? '100vw' : '50vw',
-        height: isMobile ? '75vh' : '100vh',
-        display: 'flex', 
-        flexDirection: 'column', 
-        alignItems: 'center', 
-        padding: isMobile ? '24px 24px 48px' : '40px', 
-        boxSizing: 'border-box',
-        overflowY: 'auto' 
-      }}>
-        
+      <div style={{ flex: isMobile ? '1' : '1', width: isMobile ? '100vw' : '50vw', height: isMobile ? '75vh' : '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: isMobile ? '24px 24px 48px' : '40px', boxSizing: 'border-box', overflowY: 'auto' }}>
         <div style={{ width: '100%', maxWidth: activeRole === 'corporate' ? '540px' : '420px', margin: 'auto', transition: 'max-width 0.3s ease' }}>
           
           <div style={{ marginBottom: '32px' }}>
-            <h2 style={{ fontSize: 'min(32px, 7vw)', fontWeight: '800', color: '#0F172A', marginBottom: '8px', letterSpacing: '-0.5px' }}>
-              Registrasi Platform
-            </h2>
-            <p style={{ fontSize: '14.5px', color: '#64748B', margin: 0, lineHeight: '1.6' }}>
-              Silakan pilih kategori entitas Anda dan lengkapi profil untuk mendapatkan hak akses ke dalam ekosistem Viba.ai.
-            </p>
+            <h2 style={{ fontSize: 'min(32px, 7vw)', fontWeight: '800', color: '#0F172A', marginBottom: '8px', letterSpacing: '-0.5px' }}>Registrasi Platform</h2>
+            <p style={{ fontSize: '14.5px', color: '#64748B', margin: 0, lineHeight: '1.6' }}>Silakan pilih kategori entitas Anda dan lengkapi profil untuk mendapatkan hak akses ke dalam ekosistem Viba.ai.</p>
           </div>
 
           <div style={{ display: 'flex', backgroundColor: '#F1F5F9', padding: '6px', borderRadius: '16px', marginBottom: '32px' }}>
-            <button 
-              type="button"
-              onClick={() => handleRoleToggle('student')}
-              style={{ flex: 1, padding: '12px', border: 'none', borderRadius: '12px', fontSize: '13px', fontWeight: '700', cursor: 'pointer', transition: 'all 0.2s', backgroundColor: activeRole === 'student' ? '#FFFFFF' : 'transparent', color: activeRole === 'student' ? '#0F172A' : '#64748B', boxShadow: activeRole === 'student' ? '0 2px 8px rgba(0,0,0,0.06)' : 'none' }}
-            >
+            <button type="button" onClick={() => handleRoleToggle('student')} style={{ flex: 1, padding: '12px', border: 'none', borderRadius: '12px', fontSize: '13px', fontWeight: '700', cursor: 'pointer', transition: 'all 0.2s', backgroundColor: activeRole === 'student' ? '#FFFFFF' : 'transparent', color: activeRole === 'student' ? '#0F172A' : '#64748B', boxShadow: activeRole === 'student' ? '0 2px 8px rgba(0,0,0,0.06)' : 'none' }}>
               Individu / Peserta Didik
             </button>
-            <button 
-              type="button"
-              onClick={() => handleRoleToggle('corporate')}
-              style={{ flex: 1, padding: '12px', border: 'none', borderRadius: '12px', fontSize: '13px', fontWeight: '700', cursor: 'pointer', transition: 'all 0.2s', backgroundColor: activeRole === 'corporate' ? '#FFFFFF' : 'transparent', color: activeRole === 'corporate' ? '#0F172A' : '#64748B', boxShadow: activeRole === 'corporate' ? '0 2px 8px rgba(0,0,0,0.06)' : 'none' }}
-            >
+            <button type="button" onClick={() => handleRoleToggle('corporate')} style={{ flex: 1, padding: '12px', border: 'none', borderRadius: '12px', fontSize: '13px', fontWeight: '700', cursor: 'pointer', transition: 'all 0.2s', backgroundColor: activeRole === 'corporate' ? '#FFFFFF' : 'transparent', color: activeRole === 'corporate' ? '#0F172A' : '#64748B', boxShadow: activeRole === 'corporate' ? '0 2px 8px rgba(0,0,0,0.06)' : 'none' }}>
               Institusi / Pendidik
             </button>
           </div>
@@ -225,67 +170,23 @@ export default function Register() {
                 <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#334155', marginBottom: '8px' }}>
                   {activeRole === 'corporate' ? 'Nama Penanggung Jawab (PIC)' : 'Nama Lengkap'}
                 </label>
-                <input 
-                  type="text" 
-                  name="name" 
-                  value={formData.name} 
-                  onChange={handleChange} 
-                  required 
-                  disabled={isLoading}
-                  style={{ width: '100%', padding: '14px 16px', border: '1px solid #E2E8F0', borderRadius: '12px', fontSize: '14px', boxSizing: 'border-box', backgroundColor: '#FFFFFF', outline: 'none', transition: 'border-color 0.2s', color: '#0F172A', opacity: isLoading ? 0.7 : 1 }} 
-                  placeholder={activeRole === 'corporate' ? "Masukkan nama lengkap penanggung jawab" : "Masukkan nama lengkap Anda"} 
-                  onFocus={(e) => e.target.style.borderColor = '#0F172A'} 
-                  onBlur={(e) => e.target.style.borderColor = '#E2E8F0'}
-                />
+                <input type="text" name="name" value={formData.name} onChange={handleChange} required disabled={isLoading} style={{ width: '100%', padding: '14px 16px', border: '1px solid #E2E8F0', borderRadius: '12px', fontSize: '14px', boxSizing: 'border-box', backgroundColor: '#FFFFFF', outline: 'none', transition: 'border-color 0.2s', color: '#0F172A', opacity: isLoading ? 0.7 : 1 }} placeholder={activeRole === 'corporate' ? "Masukkan nama lengkap penanggung jawab" : "Masukkan nama lengkap Anda"} onFocus={(e) => e.target.style.borderColor = '#0F172A'} onBlur={(e) => e.target.style.borderColor = '#E2E8F0'} />
               </div>
 
               <div style={{ gridColumn: (activeRole === 'corporate' && !isMobile) ? '1 / span 2' : 'auto' }}>
                 <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#334155', marginBottom: '8px' }}>Alamat Surel Bisnis/Akses</label>
-                <input 
-                  type="email" 
-                  name="email" 
-                  value={formData.email} 
-                  onChange={handleChange} 
-                  required 
-                  disabled={isLoading}
-                  style={{ width: '100%', padding: '14px 16px', border: '1px solid #E2E8F0', borderRadius: '12px', fontSize: '14px', boxSizing: 'border-box', backgroundColor: '#FFFFFF', outline: 'none', transition: 'border-color 0.2s', color: '#0F172A', opacity: isLoading ? 0.7 : 1 }} 
-                  placeholder={activeRole === 'corporate' ? "Masukkan alamat email resmi institusi" : "Masukkan alamat email Anda"} 
-                  onFocus={(e) => e.target.style.borderColor = '#0F172A'} 
-                  onBlur={(e) => e.target.style.borderColor = '#E2E8F0'}
-                />
+                <input type="email" name="email" value={formData.email} onChange={handleChange} required disabled={isLoading} style={{ width: '100%', padding: '14px 16px', border: '1px solid #E2E8F0', borderRadius: '12px', fontSize: '14px', boxSizing: 'border-box', backgroundColor: '#FFFFFF', outline: 'none', transition: 'border-color 0.2s', color: '#0F172A', opacity: isLoading ? 0.7 : 1 }} placeholder={activeRole === 'corporate' ? "Masukkan alamat email resmi institusi" : "Masukkan alamat email Anda"} onFocus={(e) => e.target.style.borderColor = '#0F172A'} onBlur={(e) => e.target.style.borderColor = '#E2E8F0'} />
               </div>
 
               {activeRole === 'corporate' && (
                 <>
                   <div>
                     <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#334155', marginBottom: '8px' }}>Nomor Kontak Institusi</label>
-                    <input 
-                      type="tel" 
-                      name="phone" 
-                      value={formData.phone} 
-                      onChange={handleChange} 
-                      required 
-                      disabled={isLoading}
-                      style={{ width: '100%', padding: '14px 16px', border: '1px solid #E2E8F0', borderRadius: '12px', fontSize: '14px', boxSizing: 'border-box', backgroundColor: '#FFFFFF', outline: 'none', transition: 'border-color 0.2s', color: '#0F172A', opacity: isLoading ? 0.7 : 1 }} 
-                      placeholder="Masukkan nomor kontak resmi" 
-                      onFocus={(e) => e.target.style.borderColor = '#0F172A'} 
-                      onBlur={(e) => e.target.style.borderColor = '#E2E8F0'}
-                    />
+                    <input type="tel" name="phone" value={formData.phone} onChange={handleChange} required disabled={isLoading} style={{ width: '100%', padding: '14px 16px', border: '1px solid #E2E8F0', borderRadius: '12px', fontSize: '14px', boxSizing: 'border-box', backgroundColor: '#FFFFFF', outline: 'none', transition: 'border-color 0.2s', color: '#0F172A', opacity: isLoading ? 0.7 : 1 }} placeholder="Masukkan nomor kontak resmi" onFocus={(e) => e.target.style.borderColor = '#0F172A'} onBlur={(e) => e.target.style.borderColor = '#E2E8F0'} />
                   </div>
                   <div>
                     <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#334155', marginBottom: '8px' }}>Nama Institusi Akademik</label>
-                    <input 
-                      type="text" 
-                      name="institution" 
-                      value={formData.institution} 
-                      onChange={handleChange} 
-                      required 
-                      disabled={isLoading}
-                      style={{ width: '100%', padding: '14px 16px', border: '1px solid #E2E8F0', borderRadius: '12px', fontSize: '14px', boxSizing: 'border-box', backgroundColor: '#FFFFFF', outline: 'none', transition: 'border-color 0.2s', color: '#0F172A', opacity: isLoading ? 0.7 : 1 }} 
-                      placeholder="Masukkan nama lengkap institusi" 
-                      onFocus={(e) => e.target.style.borderColor = '#0F172A'} 
-                      onBlur={(e) => e.target.style.borderColor = '#E2E8F0'}
-                    />
+                    <input type="text" name="institution" value={formData.institution} onChange={handleChange} required disabled={isLoading} style={{ width: '100%', padding: '14px 16px', border: '1px solid #E2E8F0', borderRadius: '12px', fontSize: '14px', boxSizing: 'border-box', backgroundColor: '#FFFFFF', outline: 'none', transition: 'border-color 0.2s', color: '#0F172A', opacity: isLoading ? 0.7 : 1 }} placeholder="Masukkan nama lengkap institusi" onFocus={(e) => e.target.style.borderColor = '#0F172A'} onBlur={(e) => e.target.style.borderColor = '#E2E8F0'} />
                   </div>
                 </>
               )}
@@ -294,25 +195,8 @@ export default function Register() {
             <div>
               <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#334155', marginBottom: '8px' }}>Kata Sandi Keamanan</label>
               <div style={{ position: 'relative' }}>
-                <input 
-                  type={showPassword ? "text" : "password"} 
-                  name="password" 
-                  value={formData.password} 
-                  onChange={handleChange} 
-                  required 
-                  disabled={isLoading}
-                  style={{ width: '100%', padding: '14px 44px 14px 16px', border: '1px solid #E2E8F0', borderRadius: '12px', fontSize: '14px', boxSizing: 'border-box', backgroundColor: '#FFFFFF', outline: 'none', transition: 'border-color 0.2s', color: '#0F172A', fontFamily: showPassword ? 'inherit' : 'caption', letterSpacing: showPassword ? 'normal' : '2px', opacity: isLoading ? 0.7 : 1 }} 
-                  placeholder="••••••••" 
-                  onFocus={(e) => e.target.style.borderColor = '#0F172A'} 
-                  onBlur={(e) => e.target.style.borderColor = '#E2E8F0'}
-                />
-                <button 
-                  type="button" 
-                  onClick={() => setShowPassword(!showPassword)}
-                  disabled={isLoading}
-                  style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: showPassword ? '#0F172A' : '#94A3B8', padding: '4px', display: 'flex', alignItems: 'center' }}
-                  title={showPassword ? "Sembunyikan Sandi" : "Tampilkan Sandi"}
-                >
+                <input type={showPassword ? "text" : "password"} name="password" value={formData.password} onChange={handleChange} required disabled={isLoading} style={{ width: '100%', padding: '14px 44px 14px 16px', border: '1px solid #E2E8F0', borderRadius: '12px', fontSize: '14px', boxSizing: 'border-box', backgroundColor: '#FFFFFF', outline: 'none', transition: 'border-color 0.2s', color: '#0F172A', fontFamily: showPassword ? 'inherit' : 'caption', letterSpacing: showPassword ? 'normal' : '2px', opacity: isLoading ? 0.7 : 1 }} placeholder="••••••••" onFocus={(e) => e.target.style.borderColor = '#0F172A'} onBlur={(e) => e.target.style.borderColor = '#E2E8F0'} />
+                <button type="button" onClick={() => setShowPassword(!showPassword)} disabled={isLoading} style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: showPassword ? '#0F172A' : '#94A3B8', padding: '4px', display: 'flex', alignItems: 'center' }} title={showPassword ? "Sembunyikan Sandi" : "Tampilkan Sandi"}>
                   {showPassword ? <IconEyeOff /> : <IconEye />}
                 </button>
               </div>
@@ -321,35 +205,14 @@ export default function Register() {
             <div>
               <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#334155', marginBottom: '8px' }}>Konfirmasi Kata Sandi</label>
               <div style={{ position: 'relative' }}>
-                <input 
-                  type={showConfirmPassword ? "text" : "password"} 
-                  name="confirmPassword" 
-                  value={formData.confirmPassword} 
-                  onChange={handleChange} 
-                  required 
-                  disabled={isLoading}
-                  style={{ width: '100%', padding: '14px 44px 14px 16px', border: '1px solid #E2E8F0', borderRadius: '12px', fontSize: '14px', boxSizing: 'border-box', backgroundColor: '#FFFFFF', outline: 'none', transition: 'border-color 0.2s', color: '#0F172A', fontFamily: showConfirmPassword ? 'inherit' : 'caption', letterSpacing: showConfirmPassword ? 'normal' : '2px', opacity: isLoading ? 0.7 : 1 }} 
-                  placeholder="••••••••" 
-                  onFocus={(e) => e.target.style.borderColor = '#0F172A'} 
-                  onBlur={(e) => e.target.style.borderColor = '#E2E8F0'}
-                />
-                <button 
-                  type="button" 
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  disabled={isLoading}
-                  style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: showConfirmPassword ? '#0F172A' : '#94A3B8', padding: '4px', display: 'flex', alignItems: 'center' }}
-                  title={showConfirmPassword ? "Sembunyikan Sandi" : "Tampilkan Sandi"}
-                >
+                <input type={showConfirmPassword ? "text" : "password"} name="confirmPassword" value={formData.confirmPassword} onChange={handleChange} required disabled={isLoading} style={{ width: '100%', padding: '14px 44px 14px 16px', border: '1px solid #E2E8F0', borderRadius: '12px', fontSize: '14px', boxSizing: 'border-box', backgroundColor: '#FFFFFF', outline: 'none', transition: 'border-color 0.2s', color: '#0F172A', fontFamily: showConfirmPassword ? 'inherit' : 'caption', letterSpacing: showConfirmPassword ? 'normal' : '2px', opacity: isLoading ? 0.7 : 1 }} placeholder="••••••••" onFocus={(e) => e.target.style.borderColor = '#0F172A'} onBlur={(e) => e.target.style.borderColor = '#E2E8F0'} />
+                <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} disabled={isLoading} style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: showConfirmPassword ? '#0F172A' : '#94A3B8', padding: '4px', display: 'flex', alignItems: 'center' }} title={showConfirmPassword ? "Sembunyikan Sandi" : "Tampilkan Sandi"}>
                   {showConfirmPassword ? <IconEyeOff /> : <IconEye />}
                 </button>
               </div>
             </div>
 
-            <button 
-              type="submit" 
-              disabled={isLoading} 
-              style={{ marginTop: '8px', padding: '14px', backgroundColor: '#000000', color: '#FFFFFF', border: 'none', borderRadius: '12px', fontSize: '14px', fontWeight: '600', cursor: isLoading ? 'wait' : 'pointer', opacity: isLoading ? 0.8 : 1, transition: 'all 0.2s', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}
-            >
+            <button type="submit" disabled={isLoading} style={{ marginTop: '8px', padding: '14px', backgroundColor: '#000000', color: '#FFFFFF', border: 'none', borderRadius: '12px', fontSize: '14px', fontWeight: '600', cursor: isLoading ? 'wait' : 'pointer', opacity: isLoading ? 0.8 : 1, transition: 'all 0.2s', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}>
               {isLoading ? 'Memvalidasi Data...' : 'Selesaikan Pendaftaran'}
             </button>
           </form>
@@ -386,7 +249,6 @@ export default function Register() {
 
         </div>
       </div>
-
     </div>
   );
 }
